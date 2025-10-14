@@ -36,6 +36,8 @@ The game ends after 3 matchups have occurred. The player who scored the most poi
 
 ## Implementation details
 
+All code should be in javascript. You may be given typescript examples, but please when implementing use javascript.
+
 This lens is being developed by a team. Each component should be kept as modular as possible. For example, the ChatGPT integration should be developed in isolation and expose a function that can be called by the main game logic. If any functions that need to be called are unknown, please put placeholders in the code.
 
 The main game flow should be implemented in MainController.js. We are building in Lens Studio 5 which has a particular SDK. Please reference other files in the project to get an idea of the syntax to use.
