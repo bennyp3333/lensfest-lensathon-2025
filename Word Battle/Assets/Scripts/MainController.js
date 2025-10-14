@@ -7,6 +7,7 @@
 //@input Component.ScriptComponent turnBased
 //@input Component.ScriptComponent warriorManager
 //@input Component.ScriptComponent battleManager
+//@input Component.ScriptComponent scoreController
 
 //@ui {"widget":"separator"}
 //@input SceneObject groupGameUI
@@ -14,7 +15,6 @@
 //@input SceneObject groupBattleResults
 //@input SceneObject groupGameOver
 //@input Component.Text statusText
-//@input Component.Text scoreText
 
 var self = script.getSceneObject();
 var selfTransform = self.getTransform();
@@ -41,7 +41,7 @@ const PHASE_GAME_OVER = "gameOver";
 const MAX_ROUNDS = 3;
 const TURNS_PER_ROUND = 2; // 2 players per round
 
-function init() {
+async function init() {
     debugPrint("MainController initialized!");
 
     // Bind to Turn Based events
@@ -65,6 +65,16 @@ function init() {
 
     // Initialize UI
     showUI(false);
+
+    // Hide score area only during initial setup (turn < 2)
+    if (script.scoreController && script.turnBased) {
+        var turnCount = await script.turnBased.getTurnCount();
+        if (turnCount < 2) {
+            script.scoreController.disableScoreArea();
+        } else {
+            script.scoreController.enableScoreArea();
+        }
+    }
 
     // Clean up any existing delays from previous sessions
     global.stopDelays("test");
@@ -105,6 +115,7 @@ async function onTurnStart(event) {
     }
 
     await handleGamePhase(gamePhase, currentUserIndex, previousTurnVariables);
+    await updateScoreDisplay();
 }
 
 async function onGameOver() {
@@ -280,6 +291,12 @@ async function processBattlePhase() {
             );
         }
 
+        // Show score area and update scores AFTER incrementing
+        if (script.scoreController) {
+            script.scoreController.enableScoreArea();
+            await updateScoreDisplay();
+        }
+
         // Store battle result
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
@@ -324,6 +341,12 @@ async function processBattlePhase() {
             );
         }
 
+        // Show score area and update scores AFTER incrementing (fallback)
+        if (script.scoreController) {
+            script.scoreController.enableScoreArea();
+            await updateScoreDisplay();
+        }
+
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
             fallbackResult
@@ -345,6 +368,13 @@ async function showBattleResults() {
 
     if (battleResult) {
         showBattleResultsUI(true);
+
+        // Show score area and update scores
+        if (script.scoreController) {
+            script.scoreController.enableScoreArea();
+            await updateScoreDisplay();
+        }
+
         updateStatusText(
             "Round " +
                 currentRound +
@@ -428,6 +458,12 @@ async function showFinalResults() {
         (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
 
     showGameOverUI(true);
+
+    // Ensure score area is visible and updated for final results
+    if (script.scoreController) {
+        script.scoreController.enableScoreArea();
+        await updateScoreDisplay();
+    }
 
     var resultText = "";
     if (winner === -1) {
@@ -616,9 +652,28 @@ function updateStatusText(text) {
     debugPrint("Status: " + text);
 }
 
-function updateScoreText() {
-    // This will be called to update score display
-    // Implementation depends on UI setup
+// Helper function to map player scores to this player vs other player
+async function updateScoreDisplay() {
+    if (!script.scoreController) return;
+
+    var currentUserIndex = await script.turnBased.getCurrentUserIndex();
+    var player0Score =
+        (await script.turnBased.getUserVariable(0, KEY_PLAYER_SCORE)) || 0;
+    var player1Score =
+        (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
+
+    var thisPlayerScore, otherPlayerScore;
+    if (currentUserIndex === 0) {
+        // Current user is player 0, so their score is "this player"
+        thisPlayerScore = player0Score;
+        otherPlayerScore = player1Score;
+    } else {
+        // Current user is player 1, so their score is "this player"
+        thisPlayerScore = player1Score;
+        otherPlayerScore = player0Score;
+    }
+
+    script.scoreController.updateScore(thisPlayerScore, otherPlayerScore);
 }
 
 // Debug functions
