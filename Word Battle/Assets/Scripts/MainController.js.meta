@@ -26,9 +26,18 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
+    battleManager: false
     debug: false
     debugName: false
     debugText: false
+    groupBattleResults: false
+    groupGameOver: false
+    groupGameUI: false
+    groupWarriorSelection: false
+    scoreText: false
+    statusText: false
+    turnBased: false
+    warriorManager: false
   ScriptTypesHidden:
     {}
   ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
@@ -41,6 +50,15 @@
     - debug: false
       debugName: Main Controller
       debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      turnBased: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      warriorManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      battleManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      groupGameUI: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupWarriorSelection: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupBattleResults: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      scoreText: !<reference.Text> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     -
       {}

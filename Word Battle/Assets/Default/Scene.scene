@@ -2,6 +2,7 @@
   PackagePath: ""
   objects:
     - !<own> 4add79a0-50b4-4280-b9ac-a7355d8446ff
+    - !<own> 1759f4c6-37fc-4f6d-b593-ba00fb67364c
     - !<own> 0005641c-028d-459a-0000-000000014b4d
     - !<own> 00000000-0000-0065-0000-000000000064
     - !<own> 22e831ff-c8cc-4804-b47b-c911391ff234
@@ -266,6 +267,21 @@
     []
   Components:
     - !<own> c3ae6554-3639-47e4-9b97-41623a57b138
+- !<SceneObject/1759f4c6-37fc-4f6d-b593-ba00fb67364c>
+  PrefabRemaps:
+    []
+  Name: MainController
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> b053026d-c6bf-43e0-84b4-511f565b6c2d
 - !<SceneObject/22e831ff-c8cc-4804-b47b-c911391ff234>
   PrefabRemaps:
     []
@@ -701,6 +717,42 @@
     bottom: 0.000000
     right: 0.000000
     top: 0.000000
+- !<ScriptComponent/b053026d-c6bf-43e0-84b4-511f565b6c2d>
+  PrefabRemaps:
+    []
+  Name: MainController
+  Enabled: true
+  ScriptAsset: !<reference> afcc845b-deb5-4602-9e80-b1e50583e07d
+  ScriptInputsDefault:
+    debugName: true
+    debugText: true
+    warriorManager: true
+    battleManager: true
+    groupGameUI: true
+    groupWarriorSelection: true
+    groupBattleResults: true
+    groupGameOver: true
+    statusText: true
+    scoreText: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      debug: true
+      debugName: Main Controller
+      debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      turnBased: !<reference.ScriptComponent> c3ae6554-3639-47e4-9b97-41623a57b138
+      warriorManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      battleManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      groupGameUI: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupWarriorSelection: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupBattleResults: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      scoreText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/b9a341be-b07c-4c01-87b7-f5c5080989f0>
   PrefabRemaps:
     []
@@ -750,7 +802,6 @@
     _onGameOverResponses: true
     printLogsInput: true
     loggerConfig: true
-    showDebugView: true
     _advancedOptions: true
     defaultTurnVariables: true
     remoteServiceModule: true
@@ -801,7 +852,7 @@
         printErrors: true
         printWarnings: true
         printInfoLogs: false
-      showDebugView: false
+      showDebugView: true
       _advancedOptions: false
       defaultTurnVariables:
         []

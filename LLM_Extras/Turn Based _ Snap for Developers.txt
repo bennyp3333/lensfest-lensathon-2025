@@ -1,0 +1,203 @@
+Turn BasedTurn Based is a component for building turn-based game flows using Snapchat's Turn Based Dynamic Response API. It
+enables two-player, asynchronous Lenses where users take sequential actions and share game state between turns.
+
+Turn Based Lens​
+This feature doe not support image/texture transfer.
+To use a published Turn Based Lens with other users, you must set the visibility of the Lens to Public.
+The Turn Based component extends the standard Dynamic Response system to
+support back-and-forth responses for turn-based games and experiences:
+
+User 1 opens the Lens with the Turn Based component and begins the session. On the initial turn, they make a move that sets the turn data. When the turn is complete they must capture a
+Snap, and send it to User 2.
+
+
+
+User 2 receives the Snap, taps a Tappable Area or the Your Turn CTA to enter the Lens.
+User 2 loads the turn data to set the current state of the game. They make their move, set the turn data, take a Snap, and send it
+back to User 1.
+The game alternates until the turn limit is reached or the Lens logic ends the game using setIsFinalTurn(true).
+
+Unlike standard Dynamic Response (one-way data), Turn Based creates a bidirectional loop where each user's turn
+becomes the starting state for the next. Game state, turn history, and user data are serialized and
+transferred via associatedData.
+The component handles turn management, data serialization, user role detection, and scene object toggling—so you can
+focus on game logic instead of the underlying Dynamic Response plumbing.
+Common use cases include:
+
+Word games – players take turns adding letters or words
+Strategy games – chess, checkers, or custom board games
+Quiz games – players answer questions in sequence
+Puzzle games – build or solve puzzles together
+
+Turn Data​
+Turn data lets Lenses share interactive state across Snaps. It's serialized automatically and passed using
+associatedData.
+Turn data includes:
+
+tappableAreas – Array of tappable areas; each entry has a key and a Screen Transform. Disabled transforms are
+skipped.
+globalVariables – Persistent variables shared by both user.
+userVariables – Persistent variables scoped to a specific user index (0 or 1).
+turnVariables – Temporary variables you set this turn to pass to the next user.
+previousTurnVariables – Temporary variables from the prior turn.
+turnHistory – Historical record of previous turns (if enabled).
+
+Understanding Data Flow​
+Data can propagate in several ways: Global Storage, User Storage, and Turn Variables.
+It is recommended to primarily use Global and User Storage/Variables for game data as it is persistent. Turn Variables are temporary variables you set in a single turn to pass to the next user.
+
+
+Global Storage: Per-session key/value storage shared by both users. Use getGlobalVariable(key) and
+setGlobalVariable(key, value) for shared data. For example, round number, game rules, or game state.
+
+
+User Storage: Per-session key/value storage scoped to a specific user index (0 or 1). Use
+getUserVariable(userIndex, key) and setUserVariable(userIndex, key, value) (or getCurrentUserVariable() /
+setCurrentUserVariable() and getOtherUserVariable() / setOtherUserVariable()) for per-user data like scores or
+selections.
+
+
+Turn Variables: During your turn, set values with setCurrentTurnVariable(). When a Snap is taken, these
+values are sent and will become the next user's previous turn variables. If requireTurnSubmission is enabled,
+calling endTurn() seals the data early so it can't be modified before a Snap.
+
+Previous Turn Variables: When your turn begins, you receive previous turn variables, the temporary data the other user
+sent. Inspect with getPreviousTurnVariable() or getPreviousTurnVariables().
+
+
+
+Passing Data Forward: Previous turn variables are read-only and don't persist automatically. If you want them
+available next turn, copy them into current turn variables explicitly or alternatively use Global Variables.
+
+
+Turn variables do not persist by themselves. To persist a value, read it with getPreviousTurnVariable() and write it
+back with setCurrentTurnVariable().
+Installing the Component​
+The Turn Based Custom Component is available in
+the Asset Library. Press Install/Update, then add it to
+the Asset Browser via the + button by searching for "Turn Based".
+
+Basic Setup​
+
+Add the Turn Based component to a Scene Object (or drag it into the Scene Hierarchy from the Asset Browser).
+Configure component inputs: turn limit, tappable areas, and turn variables.
+Call the component API from your game logic to control flow.
+
+Component Inputs​
+Game Configuration​
+
+InputDescriptionRequire Turn SubmissionIf true, emits onError for incomplete turn data. Call endTurn() to mark data as complete.Use Turn LimitIf true, enables a maximum number of turns for the session. The game ends when the limit is exceeded.Turn LimitMax number of turns (used if Use Turn Limit is enabled).Save Turn HistoryIf true, turn history data is serialized.Turns Saved LimitMax number of entries stored in turn history.Turn VariablesArray of initial variables for turn data storage.
+Interactive Areas and Scene Objects​
+InputDescriptionTappable AreasArray of tappable areas consisting of key and Screen Transform. Disabled areas are skipped.User 1 Scene ObjectsScene objects enabled for User 1's turn.User 2 Scene ObjectsScene objects enabled for User 2's turn.Game Over Scene ObjectsScene objects shown when the game ends (if Require Turn Submission is enabled).On Turn Start ResponsesConfigurable Component API or Behavior responses triggered when a turn starts.On Turn End ResponsesConfigurable Component API or Behavior responses triggered when a turn ends.On Game Over ResponsesConfigurable Component API or Behavior responses triggered when the game ends.
+Tappable Areas limitations
+Excess tappable areas or values outside these limits are skipped:
+Max tappable areas sent: 16
+Max total screen coverage by tappable areas: 0.4
+Max key length: 24 characters
+Center position limits (screen coords): 0.05 < x < 0.95, 0.05 < y < 0.95
+Min aspect ratio (min side / max side): 0.125
+
+Debug Settings​
+InputDescriptionDebug ModeChoose: None, Single Turn, or Simulate Turns.Tapped KeyKey of tappable area for testing in editor.Reset Simulate TurnsReset the simulated game session in editor (Simulate Turns mode).Turn CountTurn count for debug (Single Turn mode).Test Data TypeInput type for test data: JSON String or Studio Inputs (Single Turn mode).Test Is Turn CompleteMarks the editor turn as complete (Single Turn mode).Test DataDebug previous turn variables input (Single Turn mode).Test Turn HistoryDebug turn history input (Single Turn mode).Print LogsIf true, prints debug logs.Logger SettingsConfigure on-screen/console logger (font size, levels). Visible if Print Logs is enabled.Show Debug ViewDisplays a real-time overlay with current game state.
+Enable Show Debug View to see a live overlay of current user, turn count, tapped key, variables, and tappable areas.
+
+Component API​
+Methods​
+MethodReturn TypeDescriptiongetCurrentUserIndex()Promise<number>Returns index of current user, starting from 0.getTappedKey()stringKey of tappable area tapped before the Lens opened. Empty string if none.addTappableArea(key: string, screenTransform: ScreenTransform)voidAdd a tappable area described by Screen Transform with a key.removeTappableArea(key: string)voidRemove a tappable area by key.clearTappableAreas()voidClear all tappable areas.getTurnCount()Promise<number>Current turn count, starting from 0.getPreviousTurnVariable(key: string)Promise<UserDefinedGameVariable | undefined>Get a previous turn variable by key. UserDefinedGameVariable is number, string, boolean, or a dictionary/array of these.getPreviousTurnVariables()Promise<UserDefinedGameVariablesMap>Get previous turn variables (data received with the Snap) as a dictionary. Empty {} on the first turn.getCurrentTurnVariable(key: string)UserDefinedGameVariable | undefinedGet the current turn variable (data to be sent). If value is an object/array, call setCurrentTurnVariable after updating it to ensure changes are handled.setCurrentTurnVariable(key: string, value: UserDefinedGameVariable)voidSet a current turn variable.endTurn()voidMarks the turn as complete if requireTurnSubmission is enabled. Changes aren't allowed afterward.setIsFinalTurn(isFinalTurn: boolean)voidMarks the current turn as the last in the session when true.isFinalTurn()Promise<boolean>Returns true if the current turn is the final turn (limit reached or manually set).getCurrentUserDisplayName()Promise<string>Get the current user's display name.getOtherUserDisplayName()Promise<string>Get the other user's display name.getTurnHistory()Promise<TurnHistoryEntry[]>Get an array of recent turn history entries ordered by turn count. Empty on the first turn. The last entry always matches previous turn variables. TurnHistoryEntry: turnCount: number; userDefinedGameVariables: UserDefinedGameVariablesMap; isTurnComplete: boolean.getTurn(turnCount: number)Promise<TurnHistoryEntry | null>Get turn history entry for a specific turn, or null if it doesn't exist.getPreviousTurn()Promise<TurnHistoryEntry | null>Get the previous turn's history entry (same data as previous turn variables) or null.getUser(index: number)Promise<SnapchatUser | null>Returns the Snapchat user for the provided index; returns null for the current user. Can be used to load Bitmoji. Promise rejects on load error.getUserVariable(userIndex: number, key: string)UserDefinedGameVariable | undefinedGet a per-session variable for a specific user.setUserVariable(userIndex: number, key: string, value: UserDefinedGameVariable)voidSet a per-session variable for a specific user.getGlobalVariable(key: string)UserDefinedGameVariable | undefinedGet a per-session variable for the entire game session.setGlobalVariable(key: string, value: UserDefinedGameVariable)voidSet a per-session variable for the entire game session.
+Object/array variables
+If a turn variable is an object or array, call setCurrentTurnVariable after mutating it to ensure changes are saved.
+For example:turnBased.getCurrentTurnVariable('throw_data').force = 100; // may not be saved// correct usage:const throwData = turnBased.getCurrentTurnVariable('throw_data');throwData.force = 100;turnBased.setCurrentTurnVariable('throw_data', throwData);
+User loading
+getUser(index: number) returns null for the current user and rejects the promise if a load error occurs.
+Events​
+EventTypeDescriptiononTurnStartEvent<>Fired when prompt data has loaded and the turn starts. Callback provides: currentUserIndex: number (0 or 1), tappedKey: string, turnCount: number, previousTurnVariables: IUserDefinedGameVariablesMap.onTurnEndEvent<>Fired when endTurn is called and it's not the last turn (if requireTurnSubmission is enabled).onGameOverEvent<>Fired when endTurn is called and it's the last turn (if requireTurnSubmission is enabled).onErrorEvent<>Fired if an error occurs. Callback provides: code: string (INCOMPLETE_TURN_DATA_SENT, INCOMPLETE_TURN_DATA_RECEIVED), description: string.
+
+Usage Example​
+LoadOtherUserBitmoji
+Loads the other user's Bitmoji avatar using the Bitmoji 3D component. Ensure the "Auto Download" option is disabled on
+Bitmoji 3D.
+@componentexport class LoadOtherUserBitmoji extends BaseScriptComponent {  @input('Component.ScriptComponent')  turnBased: TurnBased;  @input('Component.ScriptComponent')  bitmojiComponent: ScriptComponent & {    downloadAvatarForUser: (user: SnapchatUser) => void;  };  onAwake() {    this.createEvent('OnStartEvent').bind(() => {      this.loadAvatarForOtherUser().catch((e) =>        print('Error loading avatar for other player: ' + e)      );    });  }  private async loadAvatarForOtherUser(): Promise<void> {    const turnCount = await this.turnBased.getTurnCount();    // We can only load the avatar for the other user if there is at least one turn    if (turnCount > 0) {      // Get the index of the current user and the other user      const currentUserIndex = await this.turnBased.getCurrentUserIndex();      const otherUserIndex = currentUserIndex === 0 ? 1 : 0;      // Retrieve the other user by index      const otherUser = await this.turnBased.getUser(otherUserIndex);      if (otherUser) {        // Download the avatar for the other user        this.bitmojiComponent.downloadAvatarForUser(otherUser);      }    }  }}
+Debugging and Testing​
+Debug Modes​
+Debug settings only work in Lens Studio editor and have no effect in published lenses.
+
+The component provides three debug modes for testing:
+
+None – Normal operation (use in production)
+Single Turn – Test specific turn scenarios in editor
+Simulate Turns – Full turn sequence simulation in editor
+
+Simulate Turns in Lens Studio​
+
+
+When debugMode is set to Simulate Turns, the Turn Based Component simulates a full game loop in Lens Studio using persistent editor memory. This allows you to test turn-by-turn logic without publishing or sending real Snaps.
+Each time the Snap Capture button is pressed in the preview:
+1. Current Turn is Serialized
+The current session data is saved internally as if a Snap was sent:
+
+All data set with setCurrentTurnVariable()
+Any updates to setGlobalVariable() or setUserVariable()
+
+This mimics sending a Snap to the other player.
+2. Turn Advances
+After capturing:
+
+Close the Snap preview (tap the X in the upper left corner)
+Required for Lens Studio 5.13 and earlier
+Turn progression only occurs after a manual preview reset.
+
+
+3. Role Swaps
+The user role alternates automatically:
+
+Even turns: User 1
+Odd turns: User 2
+
+Scene elements like user1SceneObjects and user2SceneObjects will toggle accordingly.
+4. Variable Propagation
+Data flows forward between turns as follows:
+
+Global Variables and User Variables are persisted automatically across all turns
+Use getGlobalVariable() and getUserVariable(index) to confirm expected state
+setTurnVariable() values → become getPreviousTurnVariables() on the next turn
+
+Preview Reset Required for Lens Studio 5.13 and below.
+You must reset the preview after capturing a Snap to advance to the next turn.
+5. Reset Simulate Turn Count
+To reset the turn count to 0, open “Additional Options” (gear icon) in the upper right corner of the Preview Window and select “Clear Turn Based State”.
+
+Best Practices​
+
+
+Provide clear visual feedback for whose turn it is.
+When the turn is complete, prompt the user to take a Snap to send to the other user.
+Use Global Variables first to manage persistent game data.
+Include previous turn replay for complex games.
+
+Error handling
+
+Always listen for onError events and provide user feedback.
+Use requireTurnSubmission for games requiring complete data.
+Validate game state before calling endTurn().
+
+Previewing Your Lens​
+To preview your Turn Based Lens in Snapchat, follow
+the Pairing to Snapchat guide. Suggested testing flow:
+
+Push the Lens to your device to test User 1
+Take a Snap after making your first move
+Send the Snap to yourself to simulate sending to User 2
+Open the Snap to test User 2 and make the next move
+Take another Snap and send it back to yourself to continue
+Repeat steps 4–5 to exercise the full flow
+
+During development, send Snaps to yourself; others won't be able to interact with your Lens while using
+push-to-device.
+
+Publishing Your Lens​
+Turn Based functionality requires your Lens to be published as Public. Hidden or Offline Lenses cannot properly share turn data between users, which will cause the turn-based gameplay to fail.
+
+Related​
+
+Turn Based Player Info – Load and display specific players' Bitmoji and display names
+in a Turn Based session.
