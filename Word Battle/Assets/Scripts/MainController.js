@@ -54,6 +54,15 @@ function init() {
         errorPrint("Turn Based component not found!");
     }
 
+    // Check ChatHelper availability
+    if (global.ChatHelper && global.ChatHelper.fight) {
+        debugPrint("ChatHelper is available - AI battles enabled");
+    } else {
+        debugPrint(
+            "ChatHelper not available - will use fallback battle system"
+        );
+    }
+
     // Initialize UI
     showUI(false);
 
@@ -237,38 +246,90 @@ async function processBattlePhase() {
 
     debugPrint("Battle: " + player0Warrior + " vs " + player1Warrior);
 
-    // Process battle (using dummy function for now)
-    var battleResult = await simulateBattle(player0Warrior, player1Warrior);
+    // Show battle processing UI
+    updateStatusText("Processing battle with AI...");
 
-    // Update scores
-    var player0Score =
-        (await script.turnBased.getUserVariable(0, KEY_PLAYER_SCORE)) || 0;
-    var player1Score =
-        (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
+    try {
+        // Process battle using ChatHelper
+        var battleResult = await simulateBattle(player0Warrior, player1Warrior);
 
-    if (battleResult.winner === 0) {
-        player0Score++;
-        await script.turnBased.setUserVariable(
-            0,
-            KEY_PLAYER_SCORE,
-            player0Score
+        // Set the round in the battle result
+        battleResult.round = await script.turnBased.getGlobalVariable(
+            KEY_CURRENT_ROUND
         );
-    } else {
-        player1Score++;
-        await script.turnBased.setUserVariable(
-            1,
-            KEY_PLAYER_SCORE,
-            player1Score
+
+        // Update scores
+        var player0Score =
+            (await script.turnBased.getUserVariable(0, KEY_PLAYER_SCORE)) || 0;
+        var player1Score =
+            (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
+
+        if (battleResult.winner === 0) {
+            player0Score++;
+            await script.turnBased.setUserVariable(
+                0,
+                KEY_PLAYER_SCORE,
+                player0Score
+            );
+        } else {
+            player1Score++;
+            await script.turnBased.setUserVariable(
+                1,
+                KEY_PLAYER_SCORE,
+                player1Score
+            );
+        }
+
+        // Store battle result
+        await script.turnBased.setGlobalVariable(
+            KEY_MATCHUP_RESULT,
+            battleResult
         );
+
+        // Move to results phase
+        await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
+
+        debugPrint(
+            "Battle complete - Winner: Player " + (battleResult.winner + 1)
+        );
+    } catch (error) {
+        errorPrint("Battle processing failed: " + error);
+
+        // Fallback to dummy battle if ChatHelper fails
+        debugPrint("Falling back to dummy battle system");
+        var fallbackResult = await fallbackBattle(
+            player0Warrior,
+            player1Warrior
+        );
+
+        // Update scores with fallback result
+        var player0Score =
+            (await script.turnBased.getUserVariable(0, KEY_PLAYER_SCORE)) || 0;
+        var player1Score =
+            (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
+
+        if (fallbackResult.winner === 0) {
+            player0Score++;
+            await script.turnBased.setUserVariable(
+                0,
+                KEY_PLAYER_SCORE,
+                player0Score
+            );
+        } else {
+            player1Score++;
+            await script.turnBased.setUserVariable(
+                1,
+                KEY_PLAYER_SCORE,
+                player1Score
+            );
+        }
+
+        await script.turnBased.setGlobalVariable(
+            KEY_MATCHUP_RESULT,
+            fallbackResult
+        );
+        await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
     }
-
-    // Store battle result
-    await script.turnBased.setGlobalVariable(KEY_MATCHUP_RESULT, battleResult);
-
-    // Move to results phase
-    await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
-
-    debugPrint("Battle complete - Winner: Player " + (battleResult.winner + 1));
 }
 
 // Results Phase
@@ -386,9 +447,53 @@ async function showFinalResults() {
     debugPrint("Final results: " + resultText);
 }
 
-// Dummy Battle System (for testing)
+// Battle System using ChatHelper
 async function simulateBattle(player0Warrior, player1Warrior) {
-    // Random winner selection for testing
+    return new Promise(function (resolve, reject) {
+        debugPrint(
+            "Starting battle between " +
+                player0Warrior +
+                " and " +
+                player1Warrior
+        );
+
+        // Check if ChatHelper is available
+        if (!global.ChatHelper || !global.ChatHelper.fight) {
+            debugPrint(
+                "ChatHelper not available, rejecting promise to trigger fallback"
+            );
+            reject(new Error("ChatHelper not available"));
+            return;
+        }
+
+        // Use ChatHelper to get AI battle result
+        global.ChatHelper.fight(
+            player0Warrior,
+            player1Warrior,
+            function (winner, comment) {
+                debugPrint("Battle result: Challenger " + winner + " wins!");
+                debugPrint("Reason: " + comment);
+
+                // Convert winner from 1/2 to 0/1 for our system
+                var battleWinner = winner - 1;
+
+                var battleResult = {
+                    winner: battleWinner,
+                    player0Warrior: player0Warrior,
+                    player1Warrior: player1Warrior,
+                    battleDescription: comment,
+                    round: null, // Will be set by caller
+                };
+
+                resolve(battleResult);
+            }
+        );
+    });
+}
+
+// Fallback Battle System (for when ChatHelper fails)
+async function fallbackBattle(player0Warrior, player1Warrior) {
+    // Random winner selection for fallback
     var randomWinner = Math.random() > 0.5 ? 0 : 1;
 
     var battleDescriptions = [
@@ -417,7 +522,7 @@ async function simulateBattle(player0Warrior, player1Warrior) {
         player0Warrior: player0Warrior,
         player1Warrior: player1Warrior,
         battleDescription: randomDescription,
-        round: await script.turnBased.getGlobalVariable(KEY_CURRENT_ROUND),
+        round: null, // Will be set by caller
     };
 }
 
