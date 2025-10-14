@@ -16,8 +16,13 @@
 //@input SceneObject groupGameOver
 //@input Component.Text statusText
 
+//@ui {"widget":"separator"}
+//@input Component.Text warriorInputText
+
 var self = script.getSceneObject();
 var selfTransform = self.getTransform();
+
+var localDelayManager = new global.DelayManager(script);
 
 // Storage Keys (internal constants)
 const KEY_GAME_PHASE = "gamePhase";
@@ -40,6 +45,10 @@ const PHASE_GAME_OVER = "gameOver";
 // Game configuration
 const MAX_ROUNDS = 3;
 const TURNS_PER_ROUND = 2; // 2 players per round
+
+// Keyboard state
+var isKeyboardActive = false;
+var currentWarriorInput = "";
 
 async function init() {
     debugPrint("MainController initialized!");
@@ -120,6 +129,9 @@ async function onTurnStart(event) {
 
 async function onGameOver() {
     debugPrint("Game Over!");
+
+    // Hide keyboard when game ends
+    hideKeyboard();
 
     // Clean up all delays when game ends
     global.stopDelays();
@@ -211,8 +223,11 @@ async function processWarriorSelection(
         "Player " + (currentUserIndex + 1) + " - Select your warrior!"
     );
 
+    // Show keyboard for warrior input
+    showKeyboardForWarriorSelection();
+
     // For testing - auto-select a random warrior after 2 seconds
-    if (script.debug) {
+    if (script.debug && false) {
         var testDelay = new global.Delay({
             onComplete: function () {
                 var testWarriors = [
@@ -239,6 +254,9 @@ async function processWarriorSelection(
 // Battle Phase
 async function processBattlePhase() {
     debugPrint("Processing battle phase...");
+
+    // Hide keyboard during battle
+    hideKeyboard();
 
     // Get both players' warriors
     var player0Warrior = await script.turnBased.getUserVariable(
@@ -359,6 +377,9 @@ async function processBattlePhase() {
 async function showBattleResults() {
     debugPrint("Showing battle results...");
 
+    // Hide keyboard during results display
+    hideKeyboard();
+
     var battleResult = await script.turnBased.getGlobalVariable(
         KEY_MATCHUP_RESULT
     );
@@ -423,6 +444,9 @@ async function continueToNextRound() {
         updateStatusText(
             "Round " + (currentRound + 1) + " - Select your warrior!"
         );
+
+        // Show keyboard for next round warrior selection
+        showKeyboardForWarriorSelection();
     }
 }
 
@@ -576,6 +600,9 @@ async function selectWarrior(warrior) {
         return false;
     }
 
+    // Hide keyboard when warrior is selected
+    hideKeyboard();
+
     // Store warrior in user variables
     await script.turnBased.setUserVariable(
         currentUserIndex,
@@ -650,6 +677,107 @@ function updateStatusText(text) {
         script.statusText.text = text;
     }
     debugPrint("Status: " + text);
+}
+
+// Keyboard Management
+async function showKeyboardForWarriorSelection() {
+    if (isKeyboardActive) {
+        debugPrint("Keyboard already active, skipping");
+        return;
+    }
+
+    debugPrint("Showing keyboard for warrior selection");
+
+    // Check if player already has a warrior selected
+    var currentUserIndex = await script.turnBased.getCurrentUserIndex();
+    var existingWarrior = await script.turnBased.getUserVariable(
+        currentUserIndex,
+        KEY_PLAYER_WARRIOR
+    );
+
+    if (existingWarrior) {
+        // Player already has a warrior, pre-populate with their existing choice
+        currentWarriorInput = existingWarrior;
+        debugPrint("Pre-populated with existing warrior: " + existingWarrior);
+    } else {
+        // Player doesn't have a warrior yet, choose a random one to pre-populate
+        var testWarriors = [
+            "Cheese",
+            "T-Rex",
+            "Time",
+            "Lightning",
+            "Mountain",
+            "Ocean",
+        ];
+        var randomWarrior =
+            testWarriors[Math.floor(Math.random() * testWarriors.length)];
+        currentWarriorInput = randomWarrior;
+        debugPrint("Pre-populated with random warrior: " + randomWarrior);
+    }
+
+    // Update the text displays with the warrior (existing or random)
+    if (script.warriorInputText) {
+        script.warriorInputText.text = currentWarriorInput;
+    }
+    if (script.userInputText) {
+        script.userInputText.text = currentWarriorInput;
+    }
+
+    // Set up keyboard options
+    var keyboardOptions = new TextInputSystem.KeyboardOptions();
+    keyboardOptions.enablePreview = true;
+    keyboardOptions.keyboardType = TextInputSystem.KeyboardType.Text;
+    keyboardOptions.returnKeyType = TextInputSystem.ReturnKeyType.Go;
+
+    // Hook up keyboard events
+    keyboardOptions.onTextChanged = onKeyboardTextChanged;
+    keyboardOptions.onReturnKeyPressed = onKeyboardReturnKey;
+
+    // Show keyboard with a small delay to ensure UI is ready
+    localDelayManager.Delay({
+        time: 0.5,
+        onComplete: function () {
+            global.textInputSystem.requestKeyboard(keyboardOptions);
+            isKeyboardActive = true;
+            debugPrint("Keyboard requested");
+        },
+    });
+}
+
+function hideKeyboard() {
+    if (isKeyboardActive) {
+        global.textInputSystem.dismissKeyboard();
+        isKeyboardActive = false;
+        debugPrint("Keyboard hidden");
+    }
+}
+
+function onKeyboardTextChanged(text, range) {
+    currentWarriorInput = text;
+
+    // Update the warrior input text display
+    if (script.warriorInputText) {
+        script.warriorInputText.text = text;
+    }
+
+    // Also update userInputText if it exists (for backward compatibility)
+    if (script.userInputText) {
+        script.userInputText.text = text;
+    }
+
+    debugPrint("Warrior input: " + text);
+}
+
+function onKeyboardReturnKey() {
+    debugPrint("Return key pressed with warrior: " + currentWarriorInput);
+
+    if (currentWarriorInput && currentWarriorInput.trim().length > 0) {
+        // Hide keyboard and submit warrior
+        hideKeyboard();
+        selectWarrior(currentWarriorInput.trim());
+    } else {
+        debugPrint("Empty warrior input, ignoring return key");
+    }
 }
 
 // Helper function to map player scores to this player vs other player

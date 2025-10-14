@@ -37,6 +37,7 @@
     scoreController: false
     statusText: false
     turnBased: false
+    warriorInputText: false
     warriorManager: false
   ScriptTypesHidden:
     {}
@@ -59,6 +60,7 @@
       groupBattleResults: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      warriorInputText: !<reference.Text> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     -
       {}

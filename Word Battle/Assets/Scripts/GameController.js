@@ -11,8 +11,7 @@ var selfTransform = self.getTransform();
 
 var localDelayManager = new global.DelayManager(script);
 
-function init(){
-
+function init() {
     //set up keyboard options
     var keyboardOptions = new TextInputSystem.KeyboardOptions();
     keyboardOptions.enablePreview = true;
@@ -26,24 +25,23 @@ function init(){
     //show keyboard
     localDelayManager.Delay({
         time: 2,
-        onComplete: function(){
+        onComplete: function () {
             global.textInputSystem.requestKeyboard(keyboardOptions);
-        }
+        },
     });
 
     debugPrint("Initilized!");
 }
 
-function onKeyboardTextChanged(text, range){
+function onKeyboardTextChanged(text, range) {
     script.inputText.text = text;
 }
 
-function onKeyboardReturnKey(){
+function onKeyboardReturnKey() {
     //submit to challenge
 }
 
-function onUpdate(){
-
+function onUpdate() {
     //debugPrint("Updated!");
 }
 
@@ -51,18 +49,26 @@ script.createEvent("OnStartEvent").bind(init);
 script.createEvent("UpdateEvent").bind(onUpdate);
 
 // Debug
-function debugPrint(text){
-    if(script.debug){
+function debugPrint(text) {
+    if (script.debug) {
         var newLog = script.debugName + ": " + text;
-        if(global.textLogger){ global.logToScreen(newLog); }
-        if(script.debugText){ script.debugText.text = newLog; }
+        if (global.textLogger) {
+            global.logToScreen(newLog);
+        }
+        if (script.debugText) {
+            script.debugText.text = newLog;
+        }
         print(newLog);
     }
 }
 
-function errorPrint(text){
+function errorPrint(text) {
     var errorLog = "!!ERROR!! " + script.debugName + ": " + text;
-    if(global.textLogger){ global.logError(errorLog); }
-    if(script.debugText){ script.debugText.text = errorLog; }
+    if (global.textLogger) {
+        global.logError(errorLog);
+    }
+    if (script.debugText) {
+        script.debugText.text = errorLog;
+    }
     print(errorLog);
 }

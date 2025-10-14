@@ -47,9 +47,9 @@ script.fight = function (challenger1, challenger2, callback) {
         " Return a JSON with 2 parameters, winner (int:  which challenger won, 1 or 2) and reason (string: why that challenger won)";
 
     return new GPTRequest(question).send(function (request) {
-        debugPrint("Chat returned: " + request.mainAnswer);
+        debugPrint("Raw answer: " + request.mainAnswer);
         var jsonAnswer = JSON.parse(request.mainAnswer);
-        debugPrint("Chat returned: " + request.mainAnswer);
+        debugPrint("Parsed answer: " + jsonAnswer);
 
         var winner = parseInt(jsonAnswer["winner"]);
         var comment = jsonAnswer["reason"];
