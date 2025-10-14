@@ -724,16 +724,32 @@
   Enabled: true
   ScriptAsset: !<reference> afcc845b-deb5-4602-9e80-b1e50583e07d
   ScriptInputsDefault:
-    debug: true
     debugName: true
     debugText: true
+    warriorManager: true
+    battleManager: true
+    groupGameUI: true
+    groupWarriorSelection: true
+    groupBattleResults: true
+    groupGameOver: true
+    statusText: true
+    scoreText: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
     "":
-      debug: false
+      debug: true
       debugName: Main Controller
       debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      turnBased: !<reference.ScriptComponent> c3ae6554-3639-47e4-9b97-41623a57b138
+      warriorManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      battleManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      groupGameUI: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupWarriorSelection: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupBattleResults: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      scoreText: !<reference.Text> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     "":
       {}
