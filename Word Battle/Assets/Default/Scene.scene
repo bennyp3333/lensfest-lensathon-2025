@@ -2,6 +2,7 @@
   PackagePath: ""
   objects:
     - !<own> 4add79a0-50b4-4280-b9ac-a7355d8446ff
+    - !<own> f64b89d9-f777-4e53-8475-afac0611ea56
     - !<own> 1759f4c6-37fc-4f6d-b593-ba00fb67364c
     - !<own> 0005641c-028d-459a-0000-000000014b4d
     - !<own> 00000000-0000-0065-0000-000000000064
@@ -298,6 +299,26 @@
   Components:
     - !<own> 5a9c3f3e-e539-4fc1-a746-b8d42c2c5785
     - !<own> dc185ecb-d303-4b60-ad96-ba6bfdd5da38
+- !<ScriptComponent/25104b03-ab69-4d72-a54e-e169a885eb58>
+  PrefabRemaps:
+    []
+  Name: ChatHelper
+  Enabled: true
+  ScriptAsset: !<reference> e7928a4c-4ef3-44dc-a67d-12fd83f0ed84
+  ScriptInputsDefault:
+    debug: true
+    debugName: true
+    debugText: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      debug: false
+      debugName: Chatbot Controller
+      debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    "":
+      {}
 - !<ScreenTransform/2736cc78-cc38-4ed8-931a-0ab0b575e011>
   PrefabRemaps:
     []
@@ -399,6 +420,7 @@
   Children:
     - !<own> 097d2e1a-43b4-4316-b271-f886ba770223
     - !<own> 0c889dc0-f269-49bb-b3b3-025f10153837
+    - !<own> 6f527263-ef23-4fe7-872a-62684bd0fb45
     - !<own> d329cae6-d3ac-454f-97a5-45cbd5ee1e61
   Components:
     []
@@ -456,6 +478,22 @@
   Components:
     - !<own> f4d812fd-5e1a-42e2-9c47-604666d0bf9c
     - !<own> 5ea7d8d6-b482-45a8-ac09-1ca39baec791
+- !<ScriptComponent/6a2e5f7d-4ccc-458a-a236-d38f703ed8cd>
+  PrefabRemaps:
+    []
+  Name: ChatGPT Helper
+  Enabled: true
+  ScriptAsset: !<reference> 6a902a85-910b-40ab-b6e0-02ec24ba1b37
+  ScriptInputsDefault:
+    remote: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      remote: !<reference.RemoteServiceModule> 3d7d3ab9-ee12-4ec4-bcfe-06493e419d76
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/6bf7e627-dbc5-4509-9b19-f69447a76ef1>
   PrefabRemaps:
     []
@@ -472,6 +510,21 @@
   Components:
     - !<own> e3f2c039-710e-4456-9252-37f1c68a7a98
     - !<own> 3d28b9da-e9e4-46eb-a4c7-fead5c71b632
+- !<SceneObject/6f527263-ef23-4fe7-872a-62684bd0fb45>
+  PrefabRemaps:
+    []
+  Name: ChatGPT Helper
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 6a2e5f7d-4ccc-458a-a236-d38f703ed8cd
 - !<Camera/79734504-052b-4db5-b556-f1ef6e719fde>
   PrefabRemaps:
     []
@@ -1060,3 +1113,18 @@
     bottom: 0.000000
     right: 0.000000
     top: 0.000000
+- !<SceneObject/f64b89d9-f777-4e53-8475-afac0611ea56>
+  PrefabRemaps:
+    []
+  Name: ChatHelper
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 25104b03-ab69-4d72-a54e-e169a885eb58
