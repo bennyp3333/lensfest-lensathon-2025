@@ -1,0 +1,50 @@
+- !<AssetImportMetadata/d232b6d4-10d8-4845-b584-c50a7114d263>
+  ImportedAssetIds:
+    JavaScriptAsset: !<reference> 35e469cd-9c29-4a90-a99e-65a71a01a489
+  ImporterName: JavaScriptAssetImporter
+  PrimaryAsset: !<reference> 35e469cd-9c29-4a90-a99e-65a71a01a489
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    JavaScriptAsset: !<own> 585d8c5a-92a0-4f88-8639-eb6cf160edab
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<ScriptAssetData/585d8c5a-92a0-4f88-8639-eb6cf160edab>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 522ea9bb-98da-4201-8110-2c2f2984db85
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    debug: false
+    debugName: false
+    debugText: false
+    inputText: false
+    typePrompt: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - typePrompt: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      inputText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      debug: false
+      debugName: Game Controller
+      debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
