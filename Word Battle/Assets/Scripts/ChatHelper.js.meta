@@ -1,0 +1,46 @@
+- !<AssetImportMetadata/708bd304-dd78-4569-a141-39c228727dc3>
+  ImportedAssetIds:
+    JavaScriptAsset: !<reference> e7928a4c-4ef3-44dc-a67d-12fd83f0ed84
+  ImporterName: JavaScriptAssetImporter
+  PrimaryAsset: !<reference> e7928a4c-4ef3-44dc-a67d-12fd83f0ed84
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    JavaScriptAsset: !<own> 983b4676-2393-43bb-a174-d5d1c4ed855d
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<ScriptAssetData/983b4676-2393-43bb-a174-d5d1c4ed855d>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: c57ba2ee-edec-47c9-bc34-2ad1a23ba0dc
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    debug: false
+    debugName: false
+    debugText: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - debug: false
+      debugName: Chatbot Controller
+      debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
