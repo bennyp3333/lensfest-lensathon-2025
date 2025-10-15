@@ -17,11 +17,14 @@
 //@input SceneObject sendSnapHint
 //@input SceneObject groupGameOver
 //@input Component.Text statusText
+//@input SceneObject upAgainstGroup
 
 //@ui {"widget":"separator"}
 //@input Component.Text warriorInputText
 //@input Component.Text winnerText
 //@input Component.Text explanationText
+//@input Component.Text battleResultText
+//@input Component.Text upAgainstText
 
 var self = script.getSceneObject();
 var selfTransform = self.getTransform();
@@ -38,6 +41,7 @@ const KEY_PLAYER_SCORE = "score";
 const KEY_PLAYER_WARRIOR_HISTORY = "warriorHistory";
 const KEY_SELECTED_WARRIOR = "selectedWarrior";
 const KEY_BATTLE_REQUEST = "battleRequest";
+const KEY_RESULT_SEALED_BY = "resultSealedBy"; // user index who produced the result
 
 // Game phases
 const PHASE_SETUP = "setup";
@@ -86,6 +90,9 @@ async function init() {
     debugPrint("Send snap hint UI hidden");
     showBattleResultsUI(false);
     debugPrint("Battle results UI hidden");
+    showGameOverUI(false);
+    debugPrint("Game over UI hidden");
+    if (script.upAgainstGroup) script.upAgainstGroup.enabled = false;
 
     try {
         // Hide score area only during initial setup (turn < 2)
@@ -126,6 +133,9 @@ async function onTurnStart(event) {
     debugPrint(
         "Turn started - User: " + currentUserIndex + ", Turn: " + turnCount
     );
+
+    // Hide send snap hint at the start of a new turn
+    showSendSnapHintUI(false);
 
     // Clean up any existing delays from previous turns
     global.stopDelays("test");
@@ -231,6 +241,9 @@ async function processWarriorSelection(
 ) {
     debugPrint("Processing warrior selection for user: " + currentUserIndex);
 
+    // Ensure send snap hint is hidden while selecting
+    showSendSnapHintUI(false);
+
     // Check if we have a warrior from the previous turn
     var selectedWarrior =
         script.turnBased.getCurrentTurnVariable(KEY_SELECTED_WARRIOR);
@@ -239,8 +252,8 @@ async function processWarriorSelection(
         debugPrint("Received warrior from previous turn: " + selectedWarrior);
     }
 
-    // Show warrior selection UI
-    showWarriorSelectionUI(true);
+    // Defer showing warrior selection UI until keyboard is open
+    showWarriorSelectionUI(false);
     showWaitingOnOutcomeUI(false); // Ensure waiting UI is hidden during selection
     showBattleResultsUI(false); // Ensure battle results UI is hidden during selection
     updateStatusText(
@@ -249,6 +262,9 @@ async function processWarriorSelection(
 
     // Show keyboard for warrior input
     showKeyboardForWarriorSelection();
+
+    // Update opponent choice UI based on other player's selection
+    await updateOpponentChoiceUI();
 
     // For testing - auto-select a random warrior after 2 seconds
     if (script.debug && false) {
@@ -282,8 +298,15 @@ async function processBattlePhase() {
     // Hide keyboard during battle
     hideKeyboard();
 
+    // Hide warrior selection UI when battle starts
+    showWarriorSelectionUI(false);
+
+    // Ensure send snap hint is hidden during battle
+    showSendSnapHintUI(false);
+
     // Ensure battle results UI is hidden at the start of battle
     showBattleResultsUI(false);
+    if (script.upAgainstGroup) script.upAgainstGroup.enabled = false;
 
     // Get both players' warriors
     var player0Warrior = await script.turnBased.getUserVariable(
@@ -295,6 +318,11 @@ async function processBattlePhase() {
         KEY_PLAYER_WARRIOR
     );
 
+    // If a previous battle result exists (from the other user's turn), reuse it
+    var precomputedBattleResult = await script.turnBased.getGlobalVariable(
+        KEY_MATCHUP_RESULT
+    );
+
     if (!player0Warrior || !player1Warrior) {
         errorPrint("Missing warriors for battle!");
         return;
@@ -304,8 +332,9 @@ async function processBattlePhase() {
 
     // Set up battle state tracking
     var battleCompleted = false;
-    var chatGptCompleted = false;
-    var battleResult = null;
+    var chatGptCompleted = !!precomputedBattleResult;
+    var resultsShown = false;
+    var battleResult = precomputedBattleResult || null;
 
     // Define the animation completion callback
     var animationCompleteCallback = function () {
@@ -319,10 +348,13 @@ async function processBattlePhase() {
             showWaitingOnOutcomeUI(true);
         } else {
             // ChatGPT already completed, now we can show results
-            debugPrint(
-                "ChatGPT already completed, now showing results after animation"
-            );
-            showBattleResultsAfterAnimation();
+            if (!resultsShown) {
+                resultsShown = true;
+                debugPrint(
+                    "ChatGPT already completed, now showing results after animation"
+                );
+                showBattleResultsAfterAnimation();
+            }
         }
     };
 
@@ -334,6 +366,38 @@ async function processBattlePhase() {
             animationCompleteCallback
         );
         debugPrint("Battle animation started");
+    }
+
+    // If we already have a precomputed result, skip ChatGPT and just wait for animation
+    if (precomputedBattleResult) {
+        debugPrint("Using precomputed battle result; skipping ChatGPT");
+
+        if (!battleCompleted) {
+            // Safety timeout in case animation callback never fires
+            var forceResultsDelayPre = new global.Delay({
+                onComplete: function () {
+                    if (!resultsShown) {
+                        resultsShown = true;
+                        debugPrint(
+                            "Animation timeout reached (precomputed), forcing results display"
+                        );
+                        showBattleResultsAfterAnimation();
+                    }
+                },
+                time: 3.0,
+                tags: ["battle-animation-timeout"],
+            });
+            forceResultsDelayPre.start();
+        } else {
+            if (!resultsShown) {
+                resultsShown = true;
+                debugPrint(
+                    "Animation already completed (precomputed), showing results now"
+                );
+                showBattleResultsAfterAnimation();
+            }
+        }
+        return;
     }
 
     // Start ChatGPT battle processing with retry logic
@@ -371,26 +435,51 @@ async function processBattlePhase() {
             );
         }
 
-        // Show score area and update scores AFTER incrementing
+        // Update score values internally; keep score area hidden until results
         if (script.scoreController) {
-            script.scoreController.enableScoreArea();
             await updateScoreDisplay();
         }
 
-        // Store battle result
+        // Store battle result and who sealed it (current user)
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
             battleResult
         );
+        try {
+            var sealerIdx = await script.turnBased.getCurrentUserIndex();
+            await script.turnBased.setGlobalVariable(
+                KEY_RESULT_SEALED_BY,
+                sealerIdx
+            );
+        } catch (eSeal) {
+            // ignore
+        }
 
         // If animation is still running, wait for it to complete
         if (!battleCompleted) {
             debugPrint("ChatGPT completed, waiting for animation to finish");
-            // The animation completion handler will call showBattleResultsAfterAnimation
+            // Safety timeout in case animation callback never fires
+            var forceResultsDelay = new global.Delay({
+                onComplete: function () {
+                    if (!resultsShown) {
+                        resultsShown = true;
+                        debugPrint(
+                            "Animation timeout reached, forcing results display"
+                        );
+                        showBattleResultsAfterAnimation();
+                    }
+                },
+                time: 3.0,
+                tags: ["battle-animation-timeout"],
+            });
+            forceResultsDelay.start();
         } else {
             // Animation already completed, show results now
-            debugPrint("Animation already completed, showing results now");
-            showBattleResultsAfterAnimation();
+            if (!resultsShown) {
+                resultsShown = true;
+                debugPrint("Animation already completed, showing results now");
+                showBattleResultsAfterAnimation();
+            }
         }
     } catch (error) {
         errorPrint("Battle processing failed after retries: " + error);
@@ -422,9 +511,8 @@ async function processBattlePhase() {
             );
         }
 
-        // Show score area and update scores AFTER incrementing (fallback)
+        // Update score values internally; keep score area hidden until results (fallback)
         if (script.scoreController) {
-            script.scoreController.enableScoreArea();
             await updateScoreDisplay();
         }
 
@@ -432,17 +520,43 @@ async function processBattlePhase() {
             KEY_MATCHUP_RESULT,
             battleResult
         );
+        try {
+            var sealerIdx2 = await script.turnBased.getCurrentUserIndex();
+            await script.turnBased.setGlobalVariable(
+                KEY_RESULT_SEALED_BY,
+                sealerIdx2
+            );
+        } catch (eSeal2) {
+            // ignore
+        }
 
         // If animation is still running, wait for it to complete
         if (!battleCompleted) {
             debugPrint("Fallback completed, waiting for animation to finish");
-            // The animation completion handler will call showBattleResultsAfterAnimation
+            // Safety timeout in case animation callback never fires
+            var forceResultsDelay2 = new global.Delay({
+                onComplete: function () {
+                    if (!resultsShown) {
+                        resultsShown = true;
+                        debugPrint(
+                            "Animation timeout reached (fallback), forcing results display"
+                        );
+                        showBattleResultsAfterAnimation();
+                    }
+                },
+                time: 3.0,
+                tags: ["battle-animation-timeout"],
+            });
+            forceResultsDelay2.start();
         } else {
             // Animation already completed, show results now
-            debugPrint(
-                "Animation already completed, showing fallback results now"
-            );
-            showBattleResultsAfterAnimation();
+            if (!resultsShown) {
+                resultsShown = true;
+                debugPrint(
+                    "Animation already completed, showing fallback results now"
+                );
+                showBattleResultsAfterAnimation();
+            }
         }
     }
 }
@@ -454,21 +568,9 @@ async function showBattleResultsAfterAnimation() {
 
     debugPrint("Animation completed, now showing battle results with delay");
 
-    // Delay showing results by 2 seconds after animation completes
-    var showResultsDelay = new global.Delay({
-        onComplete: async function () {
-            // Now move to results phase and show results
-            await script.turnBased.setGlobalVariable(
-                KEY_GAME_PHASE,
-                PHASE_RESULTS
-            );
-            // Also directly call showBattleResults to ensure it displays
-            await showBattleResults();
-        },
-        time: 0.5,
-        tags: ["show-battle-results-after-animation"],
-    });
-    showResultsDelay.start();
+    // Immediately move to results phase and show results
+    await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
+    await showBattleResults();
 }
 
 // Helper function to proceed with battle results (kept for compatibility)
@@ -495,6 +597,12 @@ async function showBattleResults() {
     var currentRound = await script.turnBased.getGlobalVariable(
         KEY_CURRENT_ROUND
     );
+    var sealerIdx = await script.turnBased.getGlobalVariable(
+        KEY_RESULT_SEALED_BY
+    );
+    var currentIdx = await script.turnBased.getCurrentUserIndex();
+    var sealerIdxNum = sealerIdx != null ? Number(sealerIdx) : -1;
+    var currentIdxNum = currentIdx != null ? Number(currentIdx) : -1;
 
     if (battleResult) {
         // Show battle results UI immediately (delay is handled before phase change)
@@ -514,15 +622,29 @@ async function showBattleResults() {
                 battleResult.battleDescription
         );
 
-        // Show results for 3 seconds, then continue
-        var resultsDelay = new global.Delay({
-            onComplete: function () {
-                continueToNextRound();
-            },
-            time: 6,
-            tags: ["battle-results", "game-flow"],
-        });
-        resultsDelay.start();
+        // If this user sealed the result, show send snap hint and wait for capture.
+        // Otherwise, auto-advance and clear the stored result so it doesn't replay again.
+        if (sealerIdxNum === currentIdxNum) {
+            showSendSnapHintUI(true);
+        } else {
+            showSendSnapHintUI(false);
+            // Clear globals so the next turn starts clean
+            await script.turnBased.setGlobalVariable(KEY_MATCHUP_RESULT, null);
+            await script.turnBased.setGlobalVariable(
+                KEY_RESULT_SEALED_BY,
+                null
+            );
+
+            // Auto-advance to next round for the viewer
+            var autoDelay = new global.Delay({
+                onComplete: function () {
+                    continueToNextRound();
+                },
+                time: 0.1,
+                tags: ["battle-results", "game-flow"],
+            });
+            autoDelay.start();
+        }
     }
 }
 
@@ -587,37 +709,81 @@ async function determineWinner() {
 async function showFinalResults() {
     debugPrint("Showing final results...");
 
+    // Proactively hide keyboard and non-gameover UI
+    hideKeyboard();
+    showWaitingOnOutcomeUI(false);
+    showBattleResultsUI(false);
+    showWarriorSelectionUI(false);
+    showSendSnapHintUI(false);
+
+    // Read final winner and scores
     var winner = await script.turnBased.getGlobalVariable(KEY_GAME_WINNER);
     var player0Score =
         (await script.turnBased.getUserVariable(0, KEY_PLAYER_SCORE)) || 0;
     var player1Score =
         (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
 
-    showGameOverUI(true);
-    showWaitingOnOutcomeUI(false); // Ensure waiting UI is hidden during game over
-    showBattleResultsUI(false); // Ensure battle results UI is hidden during game over
-
-    // Ensure score area is visible and updated for final results
-    if (script.scoreController) {
-        script.scoreController.enableScoreArea();
-        await updateScoreDisplay();
+    // Try to use display names when available
+    var currentUserIndex = -1;
+    try {
+        currentUserIndex = await script.turnBased.getCurrentUserIndex();
+    } catch (e) {
+        // ignore
+    }
+    var currentName = null;
+    var otherName = null;
+    try {
+        if (script.turnBased.getCurrentUserDisplayName) {
+            currentName = await script.turnBased.getCurrentUserDisplayName();
+        }
+        if (script.turnBased.getOtherUserDisplayName) {
+            otherName = await script.turnBased.getOtherUserDisplayName();
+        }
+    } catch (e2) {
+        // ignore
     }
 
+    // Compose result text
     var resultText = "";
     if (winner === -1) {
         resultText =
             "It's a tie! Final Score: " + player0Score + " - " + player1Score;
     } else {
-        resultText =
-            "Player " +
-            (winner + 1) +
-            " wins! Final Score: " +
-            player0Score +
-            " - " +
-            player1Score;
+        // Map winner index to a name if available
+        var winnerName = null;
+        if (
+            currentName != null &&
+            otherName != null &&
+            currentUserIndex !== -1
+        ) {
+            winnerName = winner === currentUserIndex ? currentName : otherName;
+        }
+        if (winnerName && winnerName.length > 0) {
+            resultText =
+                winnerName +
+                " wins! Final Score: " +
+                player0Score +
+                " - " +
+                player1Score;
+        } else {
+            resultText =
+                "Player " +
+                (winner + 1) +
+                " wins! Final Score: " +
+                player0Score +
+                " - " +
+                player1Score;
+        }
     }
 
+    // Show only the Game Over group
+    showGameOverUI(true);
+
+    // Update any result text fields
     updateStatusText(resultText);
+    if (script.battleResultText) {
+        script.battleResultText.text = resultText;
+    }
     debugPrint("Final results: " + resultText);
 }
 
@@ -809,7 +975,12 @@ async function selectWarrior(warrior) {
         KEY_PLAYER_WARRIOR
     );
 
-    if (player0Warrior && player1Warrior) {
+    // Refresh opponent choice UI after selection
+    await updateOpponentChoiceUI();
+
+    var enteringBattle = !!(player0Warrior && player1Warrior);
+
+    if (enteringBattle) {
         // Both warriors selected, move to battle phase
         await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_BATTLE);
         await processBattlePhase();
@@ -818,6 +989,14 @@ async function selectWarrior(warrior) {
     // End turn
     script.turnBased.endTurn();
     showWarriorSelectionUI(false);
+
+    // Show send snap hint only if we're waiting for the other player's selection
+    // If battle starts immediately, keep the hint hidden
+    if (!enteringBattle) {
+        showSendSnapHintUI(true);
+    } else {
+        showSendSnapHintUI(false);
+    }
 
     return true;
 }
@@ -853,6 +1032,30 @@ function showSendSnapHintUI(show) {
     if (script.sendSnapHint) script.sendSnapHint.enabled = show;
 }
 
+// Opponent choice UI management
+async function updateOpponentChoiceUI() {
+    try {
+        var currentIdx = await script.turnBased.getCurrentUserIndex();
+        var otherIdx = currentIdx === 0 ? 1 : 0;
+        var otherWarrior = await script.turnBased.getUserVariable(
+            otherIdx,
+            KEY_PLAYER_WARRIOR
+        );
+
+        if (otherWarrior && String(otherWarrior).length > 0) {
+            if (script.upAgainstText) {
+                script.upAgainstText.text = "Up against " + otherWarrior;
+            }
+            if (script.upAgainstGroup) script.upAgainstGroup.enabled = true;
+        } else {
+            if (script.upAgainstGroup) script.upAgainstGroup.enabled = false;
+        }
+    } catch (e) {
+        if (script.upAgainstGroup) script.upAgainstGroup.enabled = false;
+        debugPrint("updateOpponentChoiceUI error: " + e);
+    }
+}
+
 function updateStatusText(text) {
     if (script.statusText) {
         script.statusText.text = text;
@@ -868,6 +1071,9 @@ async function showKeyboardForWarriorSelection() {
     }
 
     debugPrint("Showing keyboard for warrior selection");
+
+    // Hide send snap hint while keyboard is open
+    showSendSnapHintUI(false);
 
     // Check if player already has a warrior selected
     var currentUserIndex = await script.turnBased.getCurrentUserIndex();
@@ -912,6 +1118,21 @@ async function showKeyboardForWarriorSelection() {
     keyboardOptions.keyboardType = TextInputSystem.KeyboardType.Text;
     keyboardOptions.returnKeyType = TextInputSystem.ReturnKeyType.Go;
 
+    // Prefill/placeholder using Lens Studio 5 keyboard options
+    // Use the player's current entry if available; otherwise use the example warrior
+    var prefillText =
+        currentWarriorInput && currentWarriorInput.length > 0
+            ? currentWarriorInput
+            : exampleWarrior;
+    try {
+        // Prefer initialText when available; also set placeholderText for clarity
+        keyboardOptions.initialText = prefillText;
+        keyboardOptions.placeholderText = exampleWarrior;
+    } catch (e) {
+        // Safeguard for environments lacking these fields
+        debugPrint("Keyboard options prefill not supported: " + e);
+    }
+
     // Hook up keyboard events
     keyboardOptions.onTextChanged = onKeyboardTextChanged;
     keyboardOptions.onReturnKeyPressed = onKeyboardReturnKey;
@@ -933,6 +1154,9 @@ async function showKeyboardForWarriorSelection() {
                 script.userInputText.enabled = true;
                 script.userInputText.text = currentWarriorInput;
             }
+
+            // Now reveal the warrior selection UI after keyboard is open
+            showWarriorSelectionUI(true);
 
             debugPrint("Keyboard requested and text components shown");
         },
