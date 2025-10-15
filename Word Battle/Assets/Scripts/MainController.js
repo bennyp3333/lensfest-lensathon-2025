@@ -7,6 +7,7 @@
 //@input Component.ScriptComponent turnBased
 //@input Component.ScriptComponent warriorManager
 //@input Component.ScriptComponent battleManager
+//@input Component.ScriptComponent scoreController
 
 //@ui {"widget":"separator"}
 //@input SceneObject groupGameUI
@@ -14,10 +15,14 @@
 //@input SceneObject groupBattleResults
 //@input SceneObject groupGameOver
 //@input Component.Text statusText
-//@input Component.Text scoreText
+
+//@ui {"widget":"separator"}
+//@input Component.Text warriorInputText
 
 var self = script.getSceneObject();
 var selfTransform = self.getTransform();
+
+var localDelayManager = new global.DelayManager(script);
 
 // Storage Keys (internal constants)
 const KEY_GAME_PHASE = "gamePhase";
@@ -41,7 +46,12 @@ const PHASE_GAME_OVER = "gameOver";
 const MAX_ROUNDS = 3;
 const TURNS_PER_ROUND = 2; // 2 players per round
 
-function init() {
+// Keyboard state
+var isKeyboardActive = false;
+var currentWarriorInput = "";
+var exampleWarrior = ""; // Store the example warrior that was provided
+
+async function init() {
     debugPrint("MainController initialized!");
 
     // Bind to Turn Based events
@@ -65,6 +75,16 @@ function init() {
 
     // Initialize UI
     showUI(false);
+
+    // Hide score area only during initial setup (turn < 2)
+    if (script.scoreController && script.turnBased) {
+        var turnCount = await script.turnBased.getTurnCount();
+        if (turnCount < 2) {
+            script.scoreController.disableScoreArea();
+        } else {
+            script.scoreController.enableScoreArea();
+        }
+    }
 
     // Clean up any existing delays from previous sessions
     global.stopDelays("test");
@@ -105,10 +125,14 @@ async function onTurnStart(event) {
     }
 
     await handleGamePhase(gamePhase, currentUserIndex, previousTurnVariables);
+    await updateScoreDisplay();
 }
 
 async function onGameOver() {
     debugPrint("Game Over!");
+
+    // Hide keyboard when game ends
+    hideKeyboard();
 
     // Clean up all delays when game ends
     global.stopDelays();
@@ -200,8 +224,11 @@ async function processWarriorSelection(
         "Player " + (currentUserIndex + 1) + " - Select your warrior!"
     );
 
+    // Show keyboard for warrior input
+    showKeyboardForWarriorSelection();
+
     // For testing - auto-select a random warrior after 2 seconds
-    if (script.debug) {
+    if (script.debug && false) {
         var testDelay = new global.Delay({
             onComplete: function () {
                 var testWarriors = [
@@ -228,6 +255,9 @@ async function processWarriorSelection(
 // Battle Phase
 async function processBattlePhase() {
     debugPrint("Processing battle phase...");
+
+    // Hide keyboard during battle
+    hideKeyboard();
 
     // Get both players' warriors
     var player0Warrior = await script.turnBased.getUserVariable(
@@ -280,6 +310,12 @@ async function processBattlePhase() {
             );
         }
 
+        // Show score area and update scores AFTER incrementing
+        if (script.scoreController) {
+            script.scoreController.enableScoreArea();
+            await updateScoreDisplay();
+        }
+
         // Store battle result
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
@@ -324,6 +360,12 @@ async function processBattlePhase() {
             );
         }
 
+        // Show score area and update scores AFTER incrementing (fallback)
+        if (script.scoreController) {
+            script.scoreController.enableScoreArea();
+            await updateScoreDisplay();
+        }
+
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
             fallbackResult
@@ -336,6 +378,9 @@ async function processBattlePhase() {
 async function showBattleResults() {
     debugPrint("Showing battle results...");
 
+    // Hide keyboard during results display
+    hideKeyboard();
+
     var battleResult = await script.turnBased.getGlobalVariable(
         KEY_MATCHUP_RESULT
     );
@@ -345,6 +390,13 @@ async function showBattleResults() {
 
     if (battleResult) {
         showBattleResultsUI(true);
+
+        // Show score area and update scores
+        if (script.scoreController) {
+            script.scoreController.enableScoreArea();
+            await updateScoreDisplay();
+        }
+
         updateStatusText(
             "Round " +
                 currentRound +
@@ -393,6 +445,9 @@ async function continueToNextRound() {
         updateStatusText(
             "Round " + (currentRound + 1) + " - Select your warrior!"
         );
+
+        // Show keyboard for next round warrior selection
+        showKeyboardForWarriorSelection();
     }
 }
 
@@ -428,6 +483,12 @@ async function showFinalResults() {
         (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
 
     showGameOverUI(true);
+
+    // Ensure score area is visible and updated for final results
+    if (script.scoreController) {
+        script.scoreController.enableScoreArea();
+        await updateScoreDisplay();
+    }
 
     var resultText = "";
     if (winner === -1) {
@@ -540,6 +601,9 @@ async function selectWarrior(warrior) {
         return false;
     }
 
+    // Hide keyboard when warrior is selected
+    hideKeyboard();
+
     // Store warrior in user variables
     await script.turnBased.setUserVariable(
         currentUserIndex,
@@ -616,9 +680,170 @@ function updateStatusText(text) {
     debugPrint("Status: " + text);
 }
 
-function updateScoreText() {
-    // This will be called to update score display
-    // Implementation depends on UI setup
+// Keyboard Management
+async function showKeyboardForWarriorSelection() {
+    if (isKeyboardActive) {
+        debugPrint("Keyboard already active, skipping");
+        return;
+    }
+
+    debugPrint("Showing keyboard for warrior selection");
+
+    // Check if player already has a warrior selected
+    var currentUserIndex = await script.turnBased.getCurrentUserIndex();
+    var existingWarrior = await script.turnBased.getUserVariable(
+        currentUserIndex,
+        KEY_PLAYER_WARRIOR
+    );
+
+    if (existingWarrior) {
+        // Player already has a warrior, pre-populate with their existing choice
+        currentWarriorInput = existingWarrior;
+        exampleWarrior = existingWarrior;
+        debugPrint("Pre-populated with existing warrior: " + existingWarrior);
+    } else {
+        // Player doesn't have a warrior yet, choose a random one to pre-populate
+        var testWarriors = [
+            "Cheese",
+            "T-Rex",
+            "Time",
+            "Lightning",
+            "Mountain",
+            "Ocean",
+        ];
+        var randomWarrior =
+            testWarriors[Math.floor(Math.random() * testWarriors.length)];
+        currentWarriorInput = randomWarrior;
+        exampleWarrior = randomWarrior;
+        debugPrint("Pre-populated with random warrior: " + randomWarrior);
+    }
+
+    // Hide text components initially - they'll be shown when keyboard is ready
+    if (script.warriorInputText) {
+        script.warriorInputText.enabled = false;
+    }
+    if (script.userInputText) {
+        script.userInputText.enabled = false;
+    }
+
+    // Set up keyboard options
+    var keyboardOptions = new TextInputSystem.KeyboardOptions();
+    keyboardOptions.enablePreview = true;
+    keyboardOptions.keyboardType = TextInputSystem.KeyboardType.Text;
+    keyboardOptions.returnKeyType = TextInputSystem.ReturnKeyType.Go;
+
+    // Hook up keyboard events
+    keyboardOptions.onTextChanged = onKeyboardTextChanged;
+    keyboardOptions.onReturnKeyPressed = onKeyboardReturnKey;
+    keyboardOptions.onKeyboardDismissed = onKeyboardDismissed;
+
+    // Show keyboard with a small delay to ensure UI is ready
+    localDelayManager.Delay({
+        time: 0.5,
+        onComplete: function () {
+            global.textInputSystem.requestKeyboard(keyboardOptions);
+            isKeyboardActive = true;
+
+            // Show text components now that keyboard is ready
+            if (script.warriorInputText) {
+                script.warriorInputText.enabled = true;
+                script.warriorInputText.text = currentWarriorInput;
+            }
+            if (script.userInputText) {
+                script.userInputText.enabled = true;
+                script.userInputText.text = currentWarriorInput;
+            }
+
+            debugPrint("Keyboard requested and text components shown");
+        },
+    });
+}
+
+function hideKeyboard() {
+    if (isKeyboardActive) {
+        global.textInputSystem.dismissKeyboard();
+        isKeyboardActive = false;
+
+        // Hide text components when keyboard is hidden
+        if (script.warriorInputText) {
+            script.warriorInputText.enabled = false;
+        }
+        if (script.userInputText) {
+            script.userInputText.enabled = false;
+        }
+
+        debugPrint("Keyboard hidden and text components disabled");
+    }
+}
+
+function onKeyboardTextChanged(text, range) {
+    currentWarriorInput = text;
+
+    // Update the warrior input text display only if it's enabled
+    if (script.warriorInputText && script.warriorInputText.enabled) {
+        script.warriorInputText.text = text;
+    }
+
+    // Also update userInputText if it exists and is enabled (for backward compatibility)
+    if (script.userInputText && script.userInputText.enabled) {
+        script.userInputText.text = text;
+    }
+
+    debugPrint("Warrior input: " + text);
+}
+
+function onKeyboardReturnKey() {
+    debugPrint("Return key pressed with warrior: " + currentWarriorInput);
+
+    var warriorToSubmit =
+        currentWarriorInput && currentWarriorInput.trim().length > 0
+            ? currentWarriorInput.trim()
+            : exampleWarrior;
+
+    debugPrint("Submitting warrior: " + warriorToSubmit);
+
+    // Hide keyboard and submit warrior
+    hideKeyboard();
+    selectWarrior(warriorToSubmit);
+}
+
+function onKeyboardDismissed() {
+    debugPrint("Keyboard dismissed with warrior: " + currentWarriorInput);
+
+    var warriorToSubmit =
+        currentWarriorInput && currentWarriorInput.trim().length > 0
+            ? currentWarriorInput.trim()
+            : exampleWarrior;
+
+    debugPrint("Submitting warrior after dismissal: " + warriorToSubmit);
+
+    // Submit warrior when keyboard is dismissed
+    isKeyboardActive = false; // Mark as inactive since it was dismissed
+    selectWarrior(warriorToSubmit);
+}
+
+// Helper function to map player scores to this player vs other player
+async function updateScoreDisplay() {
+    if (!script.scoreController) return;
+
+    var currentUserIndex = await script.turnBased.getCurrentUserIndex();
+    var player0Score =
+        (await script.turnBased.getUserVariable(0, KEY_PLAYER_SCORE)) || 0;
+    var player1Score =
+        (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
+
+    var thisPlayerScore, otherPlayerScore;
+    if (currentUserIndex === 0) {
+        // Current user is player 0, so their score is "this player"
+        thisPlayerScore = player0Score;
+        otherPlayerScore = player1Score;
+    } else {
+        // Current user is player 1, so their score is "this player"
+        thisPlayerScore = player1Score;
+        otherPlayerScore = player0Score;
+    }
+
+    script.scoreController.updateScore(thisPlayerScore, otherPlayerScore);
 }
 
 // Debug functions
