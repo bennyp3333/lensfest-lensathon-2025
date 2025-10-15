@@ -42,6 +42,7 @@ const KEY_PLAYER_WARRIOR_HISTORY = "warriorHistory";
 const KEY_SELECTED_WARRIOR = "selectedWarrior";
 const KEY_BATTLE_REQUEST = "battleRequest";
 const KEY_RESULT_SEALED_BY = "resultSealedBy"; // user index who produced the result
+const KEY_LAST_UPDATED_ROUND = "lastUpdatedRound"; // per-user: which round their warrior was last updated
 
 // Game phases
 const PHASE_SETUP = "setup";
@@ -51,7 +52,7 @@ const PHASE_RESULTS = "results";
 const PHASE_GAME_OVER = "gameOver";
 
 // Game configuration
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 4;
 const TURNS_PER_ROUND = 2; // 2 players per round
 
 // Keyboard state
@@ -435,10 +436,7 @@ async function processBattlePhase() {
             );
         }
 
-        // Update score values internally; keep score area hidden until results
-        if (script.scoreController) {
-            await updateScoreDisplay();
-        }
+        // Defer score display update until results screen
 
         // Store battle result and who sealed it (current user)
         await script.turnBased.setGlobalVariable(
@@ -511,10 +509,7 @@ async function processBattlePhase() {
             );
         }
 
-        // Update score values internally; keep score area hidden until results (fallback)
-        if (script.scoreController) {
-            await updateScoreDisplay();
-        }
+        // Defer score display update until results screen (fallback)
 
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
@@ -605,14 +600,17 @@ async function showBattleResults() {
     var currentIdxNum = currentIdx != null ? Number(currentIdx) : -1;
 
     if (battleResult) {
+        // Ensure opponent indicator is hidden during results
+        if (script.upAgainstGroup) script.upAgainstGroup.enabled = false;
+
         // Show battle results UI immediately (delay is handled before phase change)
         showBattleResultsUI(true);
         showWaitingOnOutcomeUI(false); // Ensure waiting UI is hidden during results
 
         // Show score area and update scores
         if (script.scoreController) {
-            script.scoreController.enableScoreArea();
             await updateScoreDisplay();
+            script.scoreController.enableScoreArea();
         }
 
         updateStatusText(
@@ -622,10 +620,50 @@ async function showBattleResults() {
                 battleResult.battleDescription
         );
 
-        // If this user sealed the result, show send snap hint and wait for capture.
-        // Otherwise, auto-advance and clear the stored result so it doesn't replay again.
+        // Populate winner and explanation text so both devices see consistent UI
+        try {
+            var winnerWarrior =
+                battleResult.winner === 0
+                    ? battleResult.player0Warrior
+                    : battleResult.player1Warrior;
+            if (script.winnerText && winnerWarrior) {
+                script.winnerText.text = winnerWarrior + " wins!";
+            }
+            if (script.explanationText && battleResult.battleDescription) {
+                script.explanationText.text = battleResult.battleDescription;
+            }
+            if (script.battleResultText) {
+                script.battleResultText.text =
+                    "Round " +
+                    currentRound +
+                    ": " +
+                    battleResult.battleDescription;
+            }
+        } catch (uiErr) {
+            debugPrint("showBattleResults UI populate error: " + uiErr);
+        }
+
+        // Advance flow:
+        // - If this user sealed the result, immediately advance to the next round so they can
+        //   pick their next warrior; the send snap hint will be shown after they submit (per GameFlow).
+        // - Otherwise (viewer), auto-advance after a short delay as before.
         if (sealerIdxNum === currentIdxNum) {
-            showSendSnapHintUI(true);
+            showSendSnapHintUI(false);
+            // Clear globals so the next turn starts clean
+            await script.turnBased.setGlobalVariable(KEY_MATCHUP_RESULT, null);
+            await script.turnBased.setGlobalVariable(
+                KEY_RESULT_SEALED_BY,
+                null
+            );
+
+            var sealerAdvanceDelay = new global.Delay({
+                onComplete: function () {
+                    continueToNextRound();
+                },
+                time: 6.0,
+                tags: ["battle-results", "game-flow"],
+            });
+            sealerAdvanceDelay.start();
         } else {
             showSendSnapHintUI(false);
             // Clear globals so the next turn starts clean
@@ -640,7 +678,7 @@ async function showBattleResults() {
                 onComplete: function () {
                     continueToNextRound();
                 },
-                time: 0.1,
+                time: 6.0,
                 tags: ["battle-results", "game-flow"],
             });
             autoDelay.start();
@@ -662,6 +700,7 @@ async function continueToNextRound() {
             PHASE_GAME_OVER
         );
         await determineWinner();
+        await onGameOver();
         await script.turnBased.setIsFinalTurn(true);
     } else {
         // Next round
@@ -673,6 +712,21 @@ async function continueToNextRound() {
             KEY_GAME_PHASE,
             PHASE_WARRIOR_SELECTION
         );
+        // Carry over previous warriors, but reset readiness (lastUpdatedRound)
+        try {
+            await script.turnBased.setUserVariable(
+                0,
+                KEY_LAST_UPDATED_ROUND,
+                null
+            );
+            await script.turnBased.setUserVariable(
+                1,
+                KEY_LAST_UPDATED_ROUND,
+                null
+            );
+        } catch (clearReadyErr) {
+            debugPrint("Failed clearing lastUpdatedRound: " + clearReadyErr);
+        }
         showWarriorSelectionUI(true);
         showBattleResultsUI(false); // Ensure battle results UI is hidden for next round
         updateStatusText(
@@ -776,7 +830,8 @@ async function showFinalResults() {
         }
     }
 
-    // Show only the Game Over group
+    // Ensure root UI is visible and show only the Game Over group
+    showUI(true);
     showGameOverUI(true);
 
     // Update any result text fields
@@ -962,10 +1017,24 @@ async function selectWarrior(warrior) {
         history
     );
 
+    // Mark this user's warrior as updated for the current round
+    try {
+        var currentRound = await script.turnBased.getGlobalVariable(
+            KEY_CURRENT_ROUND
+        );
+        await script.turnBased.setUserVariable(
+            currentUserIndex,
+            KEY_LAST_UPDATED_ROUND,
+            currentRound
+        );
+    } catch (roundMarkErr) {
+        debugPrint("Failed to set lastUpdatedRound: " + roundMarkErr);
+    }
+
     // Set turn variable for next player
     script.turnBased.setCurrentTurnVariable(KEY_SELECTED_WARRIOR, warrior);
 
-    // Check if both players have selected warriors
+    // Check if both players are ready for THIS round
     var player0Warrior = await script.turnBased.getUserVariable(
         0,
         KEY_PLAYER_WARRIOR
@@ -974,11 +1043,25 @@ async function selectWarrior(warrior) {
         1,
         KEY_PLAYER_WARRIOR
     );
+    var currentRoundNow = await script.turnBased.getGlobalVariable(
+        KEY_CURRENT_ROUND
+    );
+    var p0UpdatedRound = await script.turnBased.getUserVariable(
+        0,
+        KEY_LAST_UPDATED_ROUND
+    );
+    var p1UpdatedRound = await script.turnBased.getUserVariable(
+        1,
+        KEY_LAST_UPDATED_ROUND
+    );
 
     // Refresh opponent choice UI after selection
     await updateOpponentChoiceUI();
 
-    var enteringBattle = !!(player0Warrior && player1Warrior);
+    var enteringBattle =
+        !!(player0Warrior && player1Warrior) &&
+        Number(p0UpdatedRound) === Number(currentRoundNow) &&
+        Number(p1UpdatedRound) === Number(currentRoundNow);
 
     if (enteringBattle) {
         // Both warriors selected, move to battle phase

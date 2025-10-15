@@ -193,7 +193,7 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Materials:
-    - !<reference> ac85928a-e362-4043-ac99-5f797687f9c0
+    - !<reference> f4ecefee-b35c-498a-b4bb-34192bb1fe63
   FlipX: false
   FlipY: false
   RotationAngle: 0
@@ -1789,10 +1789,10 @@
     right: 1.000000
     top: 1.000000
   Offset:
-    left: -20.000000
-    bottom: -10.000000
-    right: 20.000000
-    top: 10.000000
+    left: -20.000013
+    bottom: -9.999993
+    right: 20.000013
+    top: 9.999993
 - !<SceneObject/65d94d37-d054-4eeb-b24c-c014f8bdacc3>
   PrefabRemaps:
     []
@@ -2389,7 +2389,7 @@
   Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
-    Position: {x: 6.667343, y: -15.000427, z: -355.189911}
+    Position: {x: 6.667343, y: -15.000427, z: -503.353516}
     Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
     Scale: {x: 0.070104, y: 0.070104, z: 0.070104}
     HasSegmentScaleCompensation: false
@@ -2534,7 +2534,7 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Materials:
-    - !<reference> ac85928a-e362-4043-ac99-5f797687f9c0
+    - !<reference> e3622447-39fb-4d69-8b01-83f78ebfbfde
   FlipX: false
   FlipY: false
   RotationAngle: 0
@@ -3888,7 +3888,7 @@
   MeshShadowMode: None
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
-  Text: Choose your warrior!
+  Text: Type your challenger
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
