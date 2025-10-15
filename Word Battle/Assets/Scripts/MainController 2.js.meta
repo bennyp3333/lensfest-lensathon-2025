@@ -1,0 +1,70 @@
+- !<AssetImportMetadata/d472a043-cd69-43a8-a941-de5091b58854>
+  ImportedAssetIds:
+    JavaScriptAsset: !<reference> 26838714-6192-4b25-b7d2-1fc977c3680a
+  ImporterName: JavaScriptAssetImporter
+  PrimaryAsset: !<reference> 26838714-6192-4b25-b7d2-1fc977c3680a
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    JavaScriptAsset: !<own> c51ff365-b2df-45d6-8117-49697d2ef5b1
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<ScriptAssetData/c51ff365-b2df-45d6-8117-49697d2ef5b1>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 1bfa5f63-527a-43a8-a4ab-d4e827ece7d6
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    battleManager: false
+    currentChampionText: false
+    debug: false
+    debugName: false
+    debugText: false
+    explanationText: false
+    groupBattleResults: false
+    groupGameOver: false
+    promptEnterChallenger: false
+    promptPassPhone: false
+    scoreController: false
+    statusText: false
+    waitingOnOutcome: false
+    warriorInputText: false
+    winnerText: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - debug: false
+      debugName: Main Controller
+      debugText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      battleManager: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      scoreController: !<reference.ScriptComponent> 00000000-0000-0000-0000-000000000000
+      promptEnterChallenger: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      promptPassPhone: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      waitingOnOutcome: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupBattleResults: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      currentChampionText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      warriorInputText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      winnerText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      explanationText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
