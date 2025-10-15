@@ -1059,7 +1059,7 @@
   PrefabRemaps:
     []
   Name: BG
-  Enabled: true
+  Enabled: false
   Layers: 1048576
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -1608,7 +1608,7 @@
     []
   Name: Screen Region
   Enabled: true
-  ScreenRegionType: FullFrame
+  ScreenRegionType: SafeRender
   ResizeWithKeyboard: false
 - !<Canvas/dc185ecb-d303-4b60-ad96-ba6bfdd5da38>
   PrefabRemaps:
