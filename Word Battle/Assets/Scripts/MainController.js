@@ -505,7 +505,7 @@ async function showBattleResults() {
             onComplete: function () {
                 continueToNextRound();
             },
-            time: 3,
+            time: 6,
             tags: ["battle-results", "game-flow"],
         });
         resultsDelay.start();
