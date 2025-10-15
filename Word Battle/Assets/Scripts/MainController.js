@@ -49,6 +49,7 @@ const TURNS_PER_ROUND = 2; // 2 players per round
 // Keyboard state
 var isKeyboardActive = false;
 var currentWarriorInput = "";
+var exampleWarrior = ""; // Store the example warrior that was provided
 
 async function init() {
     debugPrint("MainController initialized!");
@@ -698,6 +699,7 @@ async function showKeyboardForWarriorSelection() {
     if (existingWarrior) {
         // Player already has a warrior, pre-populate with their existing choice
         currentWarriorInput = existingWarrior;
+        exampleWarrior = existingWarrior;
         debugPrint("Pre-populated with existing warrior: " + existingWarrior);
     } else {
         // Player doesn't have a warrior yet, choose a random one to pre-populate
@@ -712,15 +714,16 @@ async function showKeyboardForWarriorSelection() {
         var randomWarrior =
             testWarriors[Math.floor(Math.random() * testWarriors.length)];
         currentWarriorInput = randomWarrior;
+        exampleWarrior = randomWarrior;
         debugPrint("Pre-populated with random warrior: " + randomWarrior);
     }
 
-    // Update the text displays with the warrior (existing or random)
+    // Hide text components initially - they'll be shown when keyboard is ready
     if (script.warriorInputText) {
-        script.warriorInputText.text = currentWarriorInput;
+        script.warriorInputText.enabled = false;
     }
     if (script.userInputText) {
-        script.userInputText.text = currentWarriorInput;
+        script.userInputText.enabled = false;
     }
 
     // Set up keyboard options
@@ -732,6 +735,7 @@ async function showKeyboardForWarriorSelection() {
     // Hook up keyboard events
     keyboardOptions.onTextChanged = onKeyboardTextChanged;
     keyboardOptions.onReturnKeyPressed = onKeyboardReturnKey;
+    keyboardOptions.onKeyboardDismissed = onKeyboardDismissed;
 
     // Show keyboard with a small delay to ensure UI is ready
     localDelayManager.Delay({
@@ -739,7 +743,18 @@ async function showKeyboardForWarriorSelection() {
         onComplete: function () {
             global.textInputSystem.requestKeyboard(keyboardOptions);
             isKeyboardActive = true;
-            debugPrint("Keyboard requested");
+
+            // Show text components now that keyboard is ready
+            if (script.warriorInputText) {
+                script.warriorInputText.enabled = true;
+                script.warriorInputText.text = currentWarriorInput;
+            }
+            if (script.userInputText) {
+                script.userInputText.enabled = true;
+                script.userInputText.text = currentWarriorInput;
+            }
+
+            debugPrint("Keyboard requested and text components shown");
         },
     });
 }
@@ -748,20 +763,29 @@ function hideKeyboard() {
     if (isKeyboardActive) {
         global.textInputSystem.dismissKeyboard();
         isKeyboardActive = false;
-        debugPrint("Keyboard hidden");
+
+        // Hide text components when keyboard is hidden
+        if (script.warriorInputText) {
+            script.warriorInputText.enabled = false;
+        }
+        if (script.userInputText) {
+            script.userInputText.enabled = false;
+        }
+
+        debugPrint("Keyboard hidden and text components disabled");
     }
 }
 
 function onKeyboardTextChanged(text, range) {
     currentWarriorInput = text;
 
-    // Update the warrior input text display
-    if (script.warriorInputText) {
+    // Update the warrior input text display only if it's enabled
+    if (script.warriorInputText && script.warriorInputText.enabled) {
         script.warriorInputText.text = text;
     }
 
-    // Also update userInputText if it exists (for backward compatibility)
-    if (script.userInputText) {
+    // Also update userInputText if it exists and is enabled (for backward compatibility)
+    if (script.userInputText && script.userInputText.enabled) {
         script.userInputText.text = text;
     }
 
@@ -771,13 +795,31 @@ function onKeyboardTextChanged(text, range) {
 function onKeyboardReturnKey() {
     debugPrint("Return key pressed with warrior: " + currentWarriorInput);
 
-    if (currentWarriorInput && currentWarriorInput.trim().length > 0) {
-        // Hide keyboard and submit warrior
-        hideKeyboard();
-        selectWarrior(currentWarriorInput.trim());
-    } else {
-        debugPrint("Empty warrior input, ignoring return key");
-    }
+    var warriorToSubmit =
+        currentWarriorInput && currentWarriorInput.trim().length > 0
+            ? currentWarriorInput.trim()
+            : exampleWarrior;
+
+    debugPrint("Submitting warrior: " + warriorToSubmit);
+
+    // Hide keyboard and submit warrior
+    hideKeyboard();
+    selectWarrior(warriorToSubmit);
+}
+
+function onKeyboardDismissed() {
+    debugPrint("Keyboard dismissed with warrior: " + currentWarriorInput);
+
+    var warriorToSubmit =
+        currentWarriorInput && currentWarriorInput.trim().length > 0
+            ? currentWarriorInput.trim()
+            : exampleWarrior;
+
+    debugPrint("Submitting warrior after dismissal: " + warriorToSubmit);
+
+    // Submit warrior when keyboard is dismissed
+    isKeyboardActive = false; // Mark as inactive since it was dismissed
+    selectWarrior(warriorToSubmit);
 }
 
 // Helper function to map player scores to this player vs other player
