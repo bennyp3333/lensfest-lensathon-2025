@@ -11,8 +11,8 @@ function enableScoreArea() {
 }
 
 function updateScore(thisPlayerScore, otherPlayerScore) {
-    script.thisPlayerScore.text = thisPlayerScore.toString();
-    script.otherPlayerScore.text = otherPlayerScore.toString();
+    script.thisPlayerScore.text = "P1: " + thisPlayerScore.toString();
+    script.otherPlayerScore.text = "P2: " + otherPlayerScore.toString();
 }
 
 script.disableScoreArea = disableScoreArea;

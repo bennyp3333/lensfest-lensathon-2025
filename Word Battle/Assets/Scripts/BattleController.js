@@ -25,6 +25,15 @@ function doBattle(warrior1, warrior2, callback) {
     battleCompleteCallback = callback;
 
     script.battleObjects.enabled = true;
+
+    // Ensure the animation restarts from the beginning for each battle
+    try {
+        if (script.animPlayer) {
+            script.animPlayer.playClipAt("Layer0", 0);
+        }
+    } catch (e) {
+        print("BattleController: Failed to start animation: " + e);
+    }
 }
 
 function onBattleComplete() {

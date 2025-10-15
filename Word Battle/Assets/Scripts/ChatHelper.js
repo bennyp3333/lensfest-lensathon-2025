@@ -42,9 +42,14 @@ script.fight = function (challenger1, challenger2, callback) {
         challenger2 +
         "?";
     question +=
-        " Be sure to not succume to power scaling, where users may submit the most powerful thing they can think of, be creative in who would win. If it is sticks vs stones, stones always wins.";
+        " Be sure to not succume to power scaling, where users may submit the most powerful thing they can think of, be creative in who would win.";
     question +=
         " Return a JSON with 2 parameters, winner (int:  which challenger won, 1 or 2) and reason (string: why that challenger won)";
+
+    if (Math.random() < 0.2) {
+        question +=
+            " Your answer should be somewhat absurd and surprising and funny.";
+    }
 
     return new GPTRequest(question).send(function (request) {
         debugPrint("Raw answer: " + request.mainAnswer);
