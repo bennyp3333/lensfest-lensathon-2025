@@ -1,0 +1,50 @@
+- !<AssetImportMetadata/1da7f426-b90b-4546-ba62-512cb0c9c817>
+  ImportedAssetIds:
+    JavaScriptAsset: !<reference> ec8cce7b-5a07-4d2f-bbf8-db13c2a18447
+  ImporterName: JavaScriptAssetImporter
+  PrimaryAsset: !<reference> ec8cce7b-5a07-4d2f-bbf8-db13c2a18447
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    JavaScriptAsset: !<own> 4e9eafa3-7530-4163-9574-1a704e577162
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<ScriptAssetData/4e9eafa3-7530-4163-9574-1a704e577162>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 35926ed9-3e0a-43d9-addb-86e1cfc8759a
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    animAsset: false
+    animPlayer: false
+    battleObjects: false
+    warrior1Text: false
+    warrior2Text: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - warrior1Text: !<reference.Text3D> 00000000-0000-0000-0000-000000000000
+      warrior2Text: !<reference.Text3D> 00000000-0000-0000-0000-000000000000
+      battleObjects: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      animAsset: !<reference.AnimationAsset> 00000000-0000-0000-0000-000000000000
+      animPlayer: !<reference.AnimationPlayer> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}

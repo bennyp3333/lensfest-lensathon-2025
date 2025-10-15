@@ -30,15 +30,19 @@
     debug: false
     debugName: false
     debugText: false
+    explanationText: false
     groupBattleResults: false
     groupGameOver: false
     groupGameUI: false
     groupWarriorSelection: false
     scoreController: false
+    sendSnapHint: false
     statusText: false
     turnBased: false
+    waitingOnOutcome: false
     warriorInputText: false
     warriorManager: false
+    winnerText: false
   ScriptTypesHidden:
     {}
   ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
@@ -58,9 +62,13 @@
       groupGameUI: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       groupWarriorSelection: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       groupBattleResults: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      waitingOnOutcome: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      sendSnapHint: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
       warriorInputText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      winnerText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      explanationText: !<reference.Text> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     -
       {}

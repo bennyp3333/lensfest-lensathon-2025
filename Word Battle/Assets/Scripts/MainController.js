@@ -13,11 +13,15 @@
 //@input SceneObject groupGameUI
 //@input SceneObject groupWarriorSelection
 //@input SceneObject groupBattleResults
+//@input SceneObject waitingOnOutcome
+//@input SceneObject sendSnapHint
 //@input SceneObject groupGameOver
 //@input Component.Text statusText
 
 //@ui {"widget":"separator"}
 //@input Component.Text warriorInputText
+//@input Component.Text winnerText
+//@input Component.Text explanationText
 
 var self = script.getSceneObject();
 var selfTransform = self.getTransform();
@@ -75,6 +79,9 @@ async function init() {
 
     // Initialize UI
     showUI(false);
+    showWaitingOnOutcomeUI(false);
+    showSendSnapHintUI(false);
+    showBattleResultsUI(false);
 
     // Hide score area only during initial setup (turn < 2)
     if (script.scoreController && script.turnBased) {
@@ -220,6 +227,8 @@ async function processWarriorSelection(
 
     // Show warrior selection UI
     showWarriorSelectionUI(true);
+    showWaitingOnOutcomeUI(false); // Ensure waiting UI is hidden during selection
+    showBattleResultsUI(false); // Ensure battle results UI is hidden during selection
     updateStatusText(
         "Player " + (currentUserIndex + 1) + " - Select your warrior!"
     );
@@ -259,6 +268,9 @@ async function processBattlePhase() {
     // Hide keyboard during battle
     hideKeyboard();
 
+    // Ensure battle results UI is hidden at the start of battle
+    showBattleResultsUI(false);
+
     // Get both players' warriors
     var player0Warrior = await script.turnBased.getUserVariable(
         0,
@@ -276,12 +288,47 @@ async function processBattlePhase() {
 
     debugPrint("Battle: " + player0Warrior + " vs " + player1Warrior);
 
-    // Show battle processing UI
-    updateStatusText("Processing battle with AI...");
+    // Set up battle state tracking
+    var battleCompleted = false;
+    var chatGptCompleted = false;
+    var battleResult = null;
 
+    // Define the animation completion callback
+    var animationCompleteCallback = function () {
+        debugPrint("Battle animation completed");
+        battleCompleted = true;
+
+        // If ChatGPT hasn't completed yet, show waiting UI
+        if (!chatGptCompleted) {
+            debugPrint("ChatGPT still processing, showing waiting UI");
+            updateStatusText("Processing battle with AI...");
+            showWaitingOnOutcomeUI(true);
+        } else {
+            // ChatGPT already completed, now we can show results
+            debugPrint(
+                "ChatGPT already completed, now showing results after animation"
+            );
+            showBattleResultsAfterAnimation();
+        }
+    };
+
+    // Start the battle animation with callback
+    if (script.battleManager && script.battleManager.doBattle) {
+        script.battleManager.doBattle(
+            player0Warrior,
+            player1Warrior,
+            animationCompleteCallback
+        );
+        debugPrint("Battle animation started");
+    }
+
+    // Start ChatGPT battle processing with retry logic
     try {
-        // Process battle using ChatHelper
-        var battleResult = await simulateBattle(player0Warrior, player1Warrior);
+        battleResult = await simulateBattleWithRetry(
+            player0Warrior,
+            player1Warrior
+        );
+        chatGptCompleted = true;
 
         // Set the round in the battle result
         battleResult.round = await script.turnBased.getGlobalVariable(
@@ -322,21 +369,22 @@ async function processBattlePhase() {
             battleResult
         );
 
-        // Move to results phase
-        await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
-
-        debugPrint(
-            "Battle complete - Winner: Player " + (battleResult.winner + 1)
-        );
+        // If animation is still running, wait for it to complete
+        if (!battleCompleted) {
+            debugPrint("ChatGPT completed, waiting for animation to finish");
+            // The animation completion handler will call showBattleResultsAfterAnimation
+        } else {
+            // Animation already completed, show results now
+            debugPrint("Animation already completed, showing results now");
+            showBattleResultsAfterAnimation();
+        }
     } catch (error) {
-        errorPrint("Battle processing failed: " + error);
+        errorPrint("Battle processing failed after retries: " + error);
+        chatGptCompleted = true;
 
         // Fallback to dummy battle if ChatHelper fails
         debugPrint("Falling back to dummy battle system");
-        var fallbackResult = await fallbackBattle(
-            player0Warrior,
-            player1Warrior
-        );
+        battleResult = await fallbackBattle(player0Warrior, player1Warrior);
 
         // Update scores with fallback result
         var player0Score =
@@ -344,7 +392,7 @@ async function processBattlePhase() {
         var player1Score =
             (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
 
-        if (fallbackResult.winner === 0) {
+        if (battleResult.winner === 0) {
             player0Score++;
             await script.turnBased.setUserVariable(
                 0,
@@ -368,10 +416,56 @@ async function processBattlePhase() {
 
         await script.turnBased.setGlobalVariable(
             KEY_MATCHUP_RESULT,
-            fallbackResult
+            battleResult
         );
-        await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
+
+        // If animation is still running, wait for it to complete
+        if (!battleCompleted) {
+            debugPrint("Fallback completed, waiting for animation to finish");
+            // The animation completion handler will call showBattleResultsAfterAnimation
+        } else {
+            // Animation already completed, show results now
+            debugPrint(
+                "Animation already completed, showing fallback results now"
+            );
+            showBattleResultsAfterAnimation();
+        }
     }
+}
+
+// Helper function to show battle results after animation completes
+async function showBattleResultsAfterAnimation() {
+    // Hide waiting UI now that battle is complete
+    showWaitingOnOutcomeUI(false);
+
+    debugPrint("Animation completed, now showing battle results with delay");
+
+    // Delay showing results by 2 seconds after animation completes
+    var showResultsDelay = new global.Delay({
+        onComplete: async function () {
+            // Now move to results phase and show results
+            await script.turnBased.setGlobalVariable(
+                KEY_GAME_PHASE,
+                PHASE_RESULTS
+            );
+            // Also directly call showBattleResults to ensure it displays
+            await showBattleResults();
+        },
+        time: 0.5,
+        tags: ["show-battle-results-after-animation"],
+    });
+    showResultsDelay.start();
+}
+
+// Helper function to proceed with battle results (kept for compatibility)
+async function proceedWithBattleResults(battleResult) {
+    // Move to results phase
+    await script.turnBased.setGlobalVariable(KEY_GAME_PHASE, PHASE_RESULTS);
+
+    // Hide waiting UI now that battle is complete
+    showWaitingOnOutcomeUI(false);
+
+    debugPrint("Battle complete - Winner: Player " + (battleResult.winner + 1));
 }
 
 // Results Phase
@@ -389,7 +483,9 @@ async function showBattleResults() {
     );
 
     if (battleResult) {
+        // Show battle results UI immediately (delay is handled before phase change)
         showBattleResultsUI(true);
+        showWaitingOnOutcomeUI(false); // Ensure waiting UI is hidden during results
 
         // Show score area and update scores
         if (script.scoreController) {
@@ -442,6 +538,7 @@ async function continueToNextRound() {
             PHASE_WARRIOR_SELECTION
         );
         showWarriorSelectionUI(true);
+        showBattleResultsUI(false); // Ensure battle results UI is hidden for next round
         updateStatusText(
             "Round " + (currentRound + 1) + " - Select your warrior!"
         );
@@ -483,6 +580,8 @@ async function showFinalResults() {
         (await script.turnBased.getUserVariable(1, KEY_PLAYER_SCORE)) || 0;
 
     showGameOverUI(true);
+    showWaitingOnOutcomeUI(false); // Ensure waiting UI is hidden during game over
+    showBattleResultsUI(false); // Ensure battle results UI is hidden during game over
 
     // Ensure score area is visible and updated for final results
     if (script.scoreController) {
@@ -508,6 +607,47 @@ async function showFinalResults() {
     debugPrint("Final results: " + resultText);
 }
 
+// Battle System using ChatHelper with retry logic
+async function simulateBattleWithRetry(
+    player0Warrior,
+    player1Warrior,
+    maxRetries = 3
+) {
+    var attempt = 0;
+
+    while (attempt < maxRetries) {
+        attempt++;
+        debugPrint(
+            `ChatGPT battle attempt ${attempt}/${maxRetries} for ${player0Warrior} vs ${player1Warrior}`
+        );
+
+        try {
+            var result = await simulateBattle(player0Warrior, player1Warrior);
+            debugPrint(`ChatGPT battle succeeded on attempt ${attempt}`);
+            return result;
+        } catch (error) {
+            debugPrint(`ChatGPT battle attempt ${attempt} failed: ${error}`);
+
+            if (attempt >= maxRetries) {
+                debugPrint("All ChatGPT attempts failed, throwing error");
+                throw error;
+            }
+
+            // Wait a bit before retrying (exponential backoff)
+            var delay = Math.pow(2, attempt); // 2s, 4s, 8s...
+            debugPrint(`Waiting ${delay}s before retry...`);
+            await new Promise((resolve) => {
+                var retryDelay = new global.Delay({
+                    onComplete: resolve,
+                    time: delay,
+                    tags: ["chatgpt-retry"],
+                });
+                retryDelay.start();
+            });
+        }
+    }
+}
+
 // Battle System using ChatHelper
 async function simulateBattle(player0Warrior, player1Warrior) {
     return new Promise(function (resolve, reject) {
@@ -527,13 +667,31 @@ async function simulateBattle(player0Warrior, player1Warrior) {
             return;
         }
 
+        // Set up timeout for ChatGPT request
+        var timeoutDelay = new global.Delay({
+            onComplete: function () {
+                debugPrint("ChatGPT request timed out");
+                reject(new Error("ChatGPT request timed out"));
+            },
+            time: 15, // 15 second timeout
+            tags: ["chatgpt-timeout"],
+        });
+        timeoutDelay.start();
+
         // Use ChatHelper to get AI battle result
         global.ChatHelper.fight(
             player0Warrior,
             player1Warrior,
             function (winner, comment) {
+                // Clear the timeout delay
+                global.stopDelays("chatgpt-timeout");
+
                 debugPrint("Battle result: Challenger " + winner + " wins!");
                 debugPrint("Reason: " + comment);
+
+                script.winnerText.text =
+                    (winner === 1 ? player0Warrior : player1Warrior) + " wins!";
+                script.explanationText.text = comment;
 
                 // Convert winner from 1/2 to 0/1 for our system
                 var battleWinner = winner - 1;
@@ -671,6 +829,14 @@ function showBattleResultsUI(show) {
 
 function showGameOverUI(show) {
     if (script.groupGameOver) script.groupGameOver.enabled = show;
+}
+
+function showWaitingOnOutcomeUI(show) {
+    if (script.waitingOnOutcome) script.waitingOnOutcome.enabled = show;
+}
+
+function showSendSnapHintUI(show) {
+    if (script.sendSnapHint) script.sendSnapHint.enabled = show;
 }
 
 function updateStatusText(text) {
