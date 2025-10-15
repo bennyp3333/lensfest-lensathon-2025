@@ -27,6 +27,7 @@
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
     battleManager: false
+    battleResultText: false
     debug: false
     debugName: false
     debugText: false
@@ -39,6 +40,8 @@
     sendSnapHint: false
     statusText: false
     turnBased: false
+    upAgainstGroup: false
+    upAgainstText: false
     waitingOnOutcome: false
     warriorInputText: false
     warriorManager: false
@@ -66,9 +69,12 @@
       sendSnapHint: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       groupGameOver: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       statusText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      upAgainstGroup: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       warriorInputText: !<reference.Text> 00000000-0000-0000-0000-000000000000
       winnerText: !<reference.Text> 00000000-0000-0000-0000-000000000000
       explanationText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      battleResultText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      upAgainstText: !<reference.Text> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     -
       {}
