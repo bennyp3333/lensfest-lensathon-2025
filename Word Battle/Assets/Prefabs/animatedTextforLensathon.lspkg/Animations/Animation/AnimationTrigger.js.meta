@@ -1,0 +1,53 @@
+- !<AssetImportMetadata/937a265b-9858-4411-05ef-aff009397d83>
+  ImportedAssetIds:
+    JavaScriptAsset: !<reference> 095312af-3a15-4573-8e10-3b421cd4689a
+  ImporterName: JavaScriptAssetImporter
+  PrimaryAsset: !<reference> 095312af-3a15-4573-8e10-3b421cd4689a
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    JavaScriptAsset: !<own> 76523b5a-8cfd-4bf8-94c0-9584b4dde594
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<ScriptAssetData/76523b5a-8cfd-4bf8-94c0-9584b4dde594>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: a77a6200-7e60-45de-afa9-06f50d53fac0
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    animationMats: false
+    lastMat: false
+    theAnimPlayer: false
+    theText: false
+    triggerTimes: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - theAnimPlayer: !<reference.AnimationPlayer> 00000000-0000-0000-0000-000000000000
+      triggerTimes: !<float[]>
+        []
+      animationMats: !<reference.Material[]>
+        []
+      theText: !<reference.Text3D[]>
+        []
+      lastMat: !<reference.Material> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
