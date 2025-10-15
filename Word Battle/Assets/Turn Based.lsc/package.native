@@ -1,0 +1,51 @@
+- !<NativePackageDescriptor/74cfecb4-f853-4a3a-af30-0805c50ebbc7>
+  PackagePath: ""
+  StudioVersion:
+    major: 5
+    minor: 15
+    patch: 0
+    build: 25101318
+    type: Unset
+    buildFlavor: ""
+    timestamp: 0
+    commit: ""
+  Description: |
+    TurnBased
+    Version 1.1.1
+    
+    Turn Based is a custom component that wraps Snapchat's turn-based
+    Dynamic Response API into a creator-friendly interface. It allows Lens
+    creators to easily build asynchronous, turn-based games using poster and
+    responder flows and serialized game state.
+    See the attached readme.
+
+  SvgIcon: |
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 3C2 2.44772 2.44772 2 3 2H14.3005C15.063 2 15.5449 2.81911 15.1746 3.48564L12.3809 8.51436C12.2131 8.81638 12.2131 9.18362 12.3809 9.48564L15.1746 14.5144C15.5449 15.1809 15.063 16 14.3005 16H3C2.44772 16 2 15.5523 2 15V3Z" fill="#FFDA00"/>
+    <path d="M30 29C30 29.5523 29.5523 30 29 30L17.6995 30C16.937 30 16.4551 29.1809 16.8254 28.5144L19.6191 23.4856C19.7869 23.1836 19.7869 22.8164 19.6191 22.5144L16.8254 17.4856C16.4551 16.8191 16.937 16 17.6995 16L29 16C29.5523 16 30 16.4477 30 17L30 29Z" fill="#24BBB3"/>
+    </svg>
+
+  SetupScript:
+    code: ""
+  VersionMajor: 1
+  VersionMinor: 1
+  VersionPatch: 3
+  UpdateCheckpoint: 76
+  ExportUid: 07c9ed8c-f14d-43b0-aa55-b6b199a20980
+  ComponentUid: 35946752-a7f4-4206-bb71-1e90b9ea510f
+  PackagePolicy: CanBeUnpacked
+  ReadMe: !<reference> 90046170-06ba-4711-9d9d-854304f1e362
+  Tags:
+    []
+  Attachments:
+    []
+  Instantiable: !<reference> 2485c892-b1f1-4924-9453-ce440bd2cdfb
+  AssetLibraryDependencyStructure: !<AssetLibraryDependencyStructure>
+    Name: Turn Based
+    AssetId: 12jrfxHh9R6XfyjNegbxT8
+    Hash: 464c8a3598b26a73838da3226339730f
+    Version:
+      major: 1
+      minor: 1
+      patch: 3
+      build: 0

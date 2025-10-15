@@ -1,0 +1,233 @@
+- !<AssetImportMetadata/738bdb4c-728d-22a2-f390-c5080bd2b81e>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 2485c892-b1f1-4924-9453-ce440bd2cdfb
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 2485c892-b1f1-4924-9453-ce440bd2cdfb
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> d478454a-3401-4c58-8ddd-f22cd788c87e
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/d478454a-3401-4c58-8ddd-f22cd788c87e>
+  SvgIcon: |
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 3C2 2.44772 2.44772 2 3 2H14.3005C15.063 2 15.5449 2.81911 15.1746 3.48564L12.3809 8.51436C12.2131 8.81638 12.2131 9.18362 12.3809 9.48564L15.1746 14.5144C15.5449 15.1809 15.063 16 14.3005 16H3C2.44772 16 2 15.5523 2 15V3Z" fill="#FFDA00"/>
+    <path d="M30 29C30 29.5523 29.5523 30 29 30L17.6995 30C16.937 30 16.4551 29.1809 16.8254 28.5144L19.6191 23.4856C19.7869 23.1836 19.7869 22.8164 19.6191 22.5144L16.8254 17.4856C16.4551 16.8191 16.937 16 17.6995 16L29 16C29.5523 16 30 16.4477 30 17L30 29Z" fill="#24BBB3"/>
+    </svg>
+
+  SetupScript:
+    code: ""
+  Description: |
+    TurnBased
+    Version 1.1.1
+    
+    Turn Based is a custom component that wraps Snapchat's turn-based
+    Dynamic Response API into a creator-friendly interface. It allows Lens
+    creators to easily build asynchronous, turn-based games using poster and
+    responder flows and serialized game state.
+    See the attached readme.
+
+  VersionMajor: 1
+  VersionMinor: 1
+  VersionPatch: 3
+  ComponentUid: 35946752-a7f4-4206-bb71-1e90b9ea510f
+  ExportUid: 07c9ed8c-f14d-43b0-aa55-b6b199a20980
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    _advancedOptions: false
+    _onGameOverResponses: false
+    _onTurnEndResponses: false
+    _onTurnStartResponses: false
+    allowChangingTurnVariablesAfterTurnSubmission: false
+    debugAssociatedDataString: false
+    debugAssociatedDataStudioInputs: false
+    debugIsTurnComplete: false
+    debugMode: false
+    debugTappedKeySimulateTurn: false
+    debugTappedKeySingleTurn: false
+    debugTurnCount: false
+    debugTurnHistoryStrings: false
+    debugTurnHistoryStudioInputs: false
+    defaultTurnVariables: false
+    gameOverObjectsInputSO: false
+    loggerConfig: false
+    printLogsInput: false
+    remoteServiceModule: true
+    requireTurnSubmission: false
+    showDebugView: false
+    swapPlayersAfterSimulatedTurn: false
+    tappableAreasInput: false
+    testDataType: false
+    turnLimitInput: false
+    turnsSavedLimitInput: false
+    useTurnHistory: false
+    useTurnLimit: false
+    user1FlowObjectsInputSO: false
+    user2FlowObjectsInputSO: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 90046170-06ba-4711-9d9d-854304f1e362
+  DeclarationFile: !<reference> 2f94cdd5-dbfb-469f-a3a9-583547b58b64
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - requireTurnSubmission: false
+      allowChangingTurnVariablesAfterTurnSubmission: false
+      useTurnLimit: false
+      turnLimitInput: 2
+      useTurnHistory: false
+      turnsSavedLimitInput: 0
+      tappableAreasInput:
+        []
+      user1FlowObjectsInputSO: !<reference.SceneObject[]>
+        []
+      user2FlowObjectsInputSO: !<reference.SceneObject[]>
+        []
+      gameOverObjectsInputSO: !<reference.SceneObject[]>
+        []
+      debugMode: Simulate Turns
+      swapPlayersAfterSimulatedTurn: true
+      debugTappedKeySimulateTurn: ""
+      debugTurnCount: 0
+      debugTappedKeySingleTurn: ""
+      testDataType: Studio Inputs
+      debugIsTurnComplete: false
+      debugAssociatedDataStudioInputs:
+        []
+      debugTurnHistoryStudioInputs:
+        - variables:
+            []
+          isTurnComplete: false
+      debugAssociatedDataString: '{"key1": "value1", "key2":0}'
+      debugTurnHistoryStrings:
+        []
+      _onTurnStartResponses:
+        []
+      _onTurnEndResponses:
+        []
+      _onGameOverResponses:
+        []
+      printLogsInput: false
+      loggerConfig:
+        printOnScreen: false
+        fontSize: !<float> 12.000000
+        printErrors: true
+        printWarnings: true
+        printInfoLogs: false
+      showDebugView: false
+      _advancedOptions: false
+      defaultTurnVariables:
+        []
+      remoteServiceModule: !<reference.RemoteServiceModule> 53134e89-9460-4d35-b990-7708cd763b62
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - /*
+    - "@typedef BehaviorResponseConfig"
+    - "@ui {\"widget\":\"label\", \"label\":\"For more information, see <a href='https://developers.snap.com/lens-studio/lens-studio-workflow/adding-interactivity/behavior'>Behavior&nbsp;Documentation.</a>\"}"
+    - '@property {int} behaviorResponseType {"label":"Behavior trigger type", "widget":"combobox", "values":[{"label":"Global CustomTrigger", "value":0}, {"label":"Manual Trigger", "value":1}]}'
+    - '@property {string} customTriggerName {"showIf":"behaviorResponseType", "showIfValue":0}'
+    - '@property {Component.ScriptComponent} behaviorScript {"showIf":"behaviorResponseType", "showIfValue":1}'
+    - "*/"
+    - /*
+    - "@typedef ComponentApiResponseConfig"
+    - '@ui {"widget":"label", "label":"This response calls a specified method on a script component."}'
+    - "@property {Component.ScriptComponent} component"
+    - '@property {string} methodName {"label":"Method Name"}'
+    - "*/"
+    - "// @ui {\"widget\":\"label\", \"label\":\"<a href='https://developers.snap.com/lens-studio/features/games/turn-based'>Turn Based Documentation\"}"
+    - '// @input bool requireTurnSubmission {"hint":"If true component will emit onError events in case of submitting or loading incomplete turn data. Call endTurn() to mark turn data as complete"}'
+    - '// @input bool allowChangingTurnVariablesAfterTurnSubmission {"hint":"If true turn variables can be changed after turn submission.", "showIf":"requireTurnSubmission", "showIfValue":true}'
+    - '// @input bool useTurnLimit {"label":"Use Turn Limit"}'
+    - '// @input int turnLimitInput = 2 {"label":"Turn Limit", "hint":"Max count of turns", "widget":"spinbox", "min":2, "showIf":"useTurnLimit"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @input bool useTurnHistory {"label":"Save Turn History"}'
+    - '// @input int turnsSavedLimitInput {"label":"Turns Saved Limit", "hint":"Max count of turns saved in turn history. Excess older turns are removed from turn history.", "widget":"spinbox", "min":0, "showIf":"useTurnHistory"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Tappable Areas"}'
+    - /*
+    - "@typedef TappableAreaInput"
+    - "@property {string} key"
+    - "@property {Component.ScreenTransform} screenTransform"
+    - "*/"
+    - '// @input TappableAreaInput[] tappableAreasInput {"label":"Tappable Areas", "hint":"Only tappable areas with enabled ScreenTransforms and their SceneObjects will be used"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"group_start", "label":"Scene"}'
+    - '// @input SceneObject[] user1FlowObjectsInputSO {"label":"User1 Scene Objects", "hint":"SceneObjects which will be enabled for User 1"}'
+    - '// @input SceneObject[] user2FlowObjectsInputSO {"label":"User2 Scene Objects", "hint":"SceneObjects which will be enabled for User 2"}'
+    - '// @input SceneObject[] gameOverObjectsInputSO {"label":"Game Over Scene Objects", "hint":"SceneObjects which will be enabled when game ends", "showIf":"requireTurnSubmission"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Debug"}'
+    - '// @input string debugMode = "None" {"widget":"combobox", "values":[{"label":"None", "value":"None"}, {"label":"Single Turn", "value":"Single Turn"}, {"label":"Simulate Turns", "value":"Simulate Turns"}]}'
+    - '// @input bool swapPlayersAfterSimulatedTurn = true {"showIf":"debugMode", "showIfValue":"Simulate Turns"}'
+    - '// @input string debugTappedKeySimulateTurn {"label":"Tapped Key", "hint":"Key of tappable area", "showIf":"debugMode", "showIfValue":"Simulate Turns"}'
+    - "// @ui {\"widget\":\"label\", \"label\":\"<font color='#7acccc'><i>To reset turns, open “Additional&nbsp;Options” in the preview and select “<b>Clear&nbsp;Turn&nbsp;Based&nbsp;State</b>”.\"}"
+    - '// @ui {"widget":"group_start", "label":"Single Turn", "showIf":"debugMode", "showIfValue":"Single Turn"}'
+    - '// @input int debugTurnCount {"label":"Turn Count", "hint":"Turn count for debug. Even numbers for User 1, starting from 0. Odd numbers for User 2, starting from 1.", "widget":"spinbox", "min":0}'
+    - '// @input string debugTappedKeySingleTurn {"label":"Tapped Key", "hint":"Key of tappable area"}'
+    - '// @input string testDataType = "Studio Inputs" {"widget":"combobox", "values":[{"label":"JSON String", "value":"JSON String"}, {"label":"Studio Inputs", "value":"Studio Inputs"}]}'
+    - '// @input bool debugIsTurnComplete {"label":"Test Is Turn Complete"}'
+    - /*
+    - "@typedef UserDefinedGameVariableInput"
+    - "@property {string} key"
+    - '@property {string} type = "string" {"widget":"combobox", "values":[{"label":"string", "value":"string"}, {"label":"float", "value":"float"}, {"label":"boolean", "value":"boolean"}]}'
+    - '@property {string} valueString {"label":"Value", "showIf":"type", "showIfValue":"string"}'
+    - '@property {float} valueFloat {"label":"Value", "showIf":"type", "showIfValue":"float"}'
+    - '@property {bool} valueBoolean {"label":"Value", "showIf":"type", "showIfValue":"boolean"}'
+    - "*/"
+    - '// @input UserDefinedGameVariableInput[] debugAssociatedDataStudioInputs = {} {"label":"Test Data", "showIf":"testDataType", "showIfValue":"Studio Inputs"}'
+    - /*
+    - "@typedef DebugTurnHistoryStudioInputs"
+    - "@property {UserDefinedGameVariableInput[]} variables"
+    - "@property {bool} isTurnComplete"
+    - "*/"
+    - '// @input DebugTurnHistoryStudioInputs[] debugTurnHistoryStudioInputs = {} {"label":"Test Turn History", "showIf":"testDataType", "showIfValue":"Studio Inputs"}'
+    - '// @input string debugAssociatedDataString = "{\"key1\": \"value1\", \"key2\":0}" {"label":"Test Data", "widget":"text_area", "showIf":"testDataType", "showIfValue":"JSON String"}'
+    - /*
+    - "@typedef DebugTurnHistoryJsonStrings"
+    - '@property {string} variables = "{\"key1\": \"value1\", \"key2\":0}" {"widget":"text_area"}'
+    - "@property {bool} isTurnComplete"
+    - "*/"
+    - '// @input DebugTurnHistoryJsonStrings[] debugTurnHistoryStrings = {} {"label":"Test Turn History", "showIf":"testDataType", "showIfValue":"JSON String"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Events"}'
+    - /*
+    - "@typedef DiscreteResponseConfig"
+    - '@property {int} responseType {"widget":"combobox", "values":[{"label":"Component API Call", "value":0}, {"label":"Behavior", "value":1}]}'
+    - '@property {ComponentApiResponseConfig} componentApiResponseConfig {"showIf":"responseType", "showIfValue":0}'
+    - '@property {BehaviorResponseConfig} behaviorResponseConfig {"label":"Behavior Custom Component integration.", "showIf":"responseType", "showIfValue":1}'
+    - "*/"
+    - "// @input DiscreteResponseConfig[] _onTurnStartResponses"
+    - "// @input DiscreteResponseConfig[] _onTurnEndResponses"
+    - "// @input DiscreteResponseConfig[] _onGameOverResponses"
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @input bool printLogsInput {"label":"Print Logs"}'
+    - /*
+    - "@typedef LoggerConfig"
+    - "@property {bool} printOnScreen = true"
+    - '@property {float} fontSize = 12 {"showIf":"printOnScreen"}'
+    - "@property {bool} printErrors = true"
+    - "@property {bool} printWarnings = true"
+    - "@property {bool} printInfoLogs"
+    - "*/"
+    - '// @input LoggerConfig loggerConfig {"label":"Logger Settings", "showIf":"printLogsInput", "showIfValue":true}'
+    - '// @input bool showDebugView {"label":"Show Debug View", "hint":"Show debug information overlay"}'
+    - // @input bool _advancedOptions
+    - '// @ui {"widget":"group_start", "label":"Advanced Options", "showIf":"_advancedOptions", "showIfValue":true}'
+    - "// @ui {\"widget\":\"label\", \"label\":\"<font color='#7acccc'><i>Turn Variables are temporary and not persisted across turns.<br>Use Global or Player Variables to store data that should persist for the entire session.\"}"
+    - '// @input UserDefinedGameVariableInput[] defaultTurnVariables = {} {"label":"Turn Variables", "hint":"Default values for turn variables"}'
+    - '// @ui {"widget":"group_end"}'
+    - // @input Asset.RemoteServiceModule remoteServiceModule

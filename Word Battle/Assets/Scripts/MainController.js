@@ -79,24 +79,38 @@ async function init() {
 
     // Initialize UI
     showUI(false);
+    debugPrint("UI hidden");
     showWaitingOnOutcomeUI(false);
+    debugPrint("Waiting on outcome UI hidden");
     showSendSnapHintUI(false);
+    debugPrint("Send snap hint UI hidden");
     showBattleResultsUI(false);
+    debugPrint("Battle results UI hidden");
 
-    // Hide score area only during initial setup (turn < 2)
-    if (script.scoreController && script.turnBased) {
-        var turnCount = await script.turnBased.getTurnCount();
-        if (turnCount < 2) {
-            script.scoreController.disableScoreArea();
-        } else {
-            script.scoreController.enableScoreArea();
+    try {
+        // Hide score area only during initial setup (turn < 2)
+        if (script.scoreController && script.turnBased) {
+            debugPrint("Getting turn count");
+            var turnCount = await script.turnBased.getTurnCount();
+            // var turnCount = 0;
+            debugPrint("Turn count: " + turnCount);
+            if (turnCount < 2) {
+                script.scoreController.disableScoreArea();
+                debugPrint("Score area disabled");
+            } else {
+                debugPrint("Score area enabled");
+                script.scoreController.enableScoreArea();
+            }
         }
+    } catch (error) {
+        debugPrint("Error: " + error);
     }
 
     // Clean up any existing delays from previous sessions
     global.stopDelays("test");
     global.stopDelays("battle-results");
     global.stopDelays("game-flow");
+    debugPrint("Delays stopped");
 }
 
 function onUpdate() {
@@ -1038,5 +1052,5 @@ function errorPrint(text) {
 }
 
 // Event binding
-script.createEvent("OnStartEvent").bind(init);
-script.createEvent("UpdateEvent").bind(onUpdate);
+script.createEvent("OnStartEvent").bind(() => init());
+script.createEvent("UpdateEvent").bind(() => onUpdate());
