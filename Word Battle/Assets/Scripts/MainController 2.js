@@ -25,7 +25,7 @@
 // Game configuration
 const MAX_ROUNDS = 5;
 const PASS_PHONE_DELAY = 3.0; // Time to show "pass phone" prompt
-const RESULTS_DISPLAY_TIME = 6.0; // Time to show battle results
+const RESULTS_DISPLAY_TIME = 10.0; // Time to show battle results
 
 // Game state
 var currentRound = 0;
@@ -37,14 +37,10 @@ var championPlayer = -1; // Which player is the current champion
 var isKeyboardActive = false;
 var currentWarriorInput = "";
 var exampleWarriors = [
-    "Shark",
-    "Bear",
-    "Dragon",
-    "Lightning",
-    "Ocean",
-    "Mountain",
-    "Fire",
-    "Ice",
+    "Toaster",
+    "Rock",
+    "Ant",
+    "Mouse"
 ];
 
 var delayManager = new global.DelayManager(script);

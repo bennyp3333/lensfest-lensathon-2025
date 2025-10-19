@@ -54,14 +54,17 @@ script.fight = function (challenger1, challenger2, callback) {
         " and a " +
         cleanText(challenger2) +
         "?";
-    question +=
-        " Be sure to not succume to power scaling, where users may submit the most powerful thing they can think of, be creative in who would win.";
+    //question += " Be sure to not succume to too much power scaling, where users may submit the most powerful thing they can think of, be creative in who would win.";
     question +=
         " Return a JSON with 2 parameters, winner (int:  which challenger won, 1 or 2) and reason (string: why that challenger won)";
 
-    if (Math.random() < 0.2) {
+    if (Math.random() < 0.3) {
         question +=
             " Your answer should be somewhat absurd and surprising and funny.";
+    }
+
+    if (Math.random() < 0.3) {
+        question += " You can be off the wall and unhinged with your response. Keep it appropriate, but add some snark."
     }
 
     try {
@@ -118,7 +121,7 @@ function GPTRequest(content) {
     this.callback = null;
 
     this.request = {
-        temperature: 0,
+        temperature: 0.5,
         messages: [{ role: "system", content: this.content }],
     };
 
